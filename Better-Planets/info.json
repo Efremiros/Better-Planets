@@ -1,0 +1,24 @@
+{
+  "name": "TierAndRadiusOverrides",
+  "version": "1.2.0",
+  "title": "Углы и радиусы: переопределение",
+  "author": "you + gpt",
+  "factorio_version": "2.0",
+  "description": "Переопределяет угол (tier) и радиус (distance) планет и космических точек. Значения настраиваются в меню модов.",
+  "dependencies": [
+    "base >= 2.0",
+    "PlanetsLib >= 1.1.16",
+    "? PlanetsLibTiers >= 1.0.0",
+    "? metal-and-stars",
+    "? Starmap_Nexuz",
+    "? erm_zerg",
+    "? erm_toss",
+    "? tenebris",
+    "? maraxsis",
+    "? planet-arrakis",
+    "? Factorio-Tiberium",
+    "? corrundum",
+    "? janus",
+    "? naufulglebunusilo"
+  ]
+}
