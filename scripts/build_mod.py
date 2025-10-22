@@ -46,12 +46,8 @@ def main() -> None:
     if not mod_name or not mod_version:
         raise SystemExit("info.json must define both 'name' and 'version'")
 
-    if mod_root.name != mod_name:
-        raise SystemExit(
-            f"The mod directory should be named '{mod_name}', not '{mod_root.name}'"
-        )
-
     package_name = f"{mod_name}_{mod_version}"
+
     folder_name = mod_name
     dist_dir = repo_root / "dist"
     dist_dir.mkdir(exist_ok=True)
