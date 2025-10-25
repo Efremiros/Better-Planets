@@ -1,7 +1,7 @@
 -- data-final-fixes.lua
--- 1) Создаём GUI-спрайты [img=tr-picon-<name>] из starmap_icon/icon/любой-табличной-иконки.
--- 2) На самой поздней стадии применяем угол/радиус к реальному прототипу (planet или space-location).
--- 3) Для лун чинём отсутствующего родителя (Nauvis/Fulgora).
+-- 1) Создаём GUI-спрайты [img=tr-picon-<name>] из любой подходящей иконки прототипа.
+-- 2) Применяем угол (в ГРАДУСАХ, CCW от севера) и/или радиус к real-прототипу (planet/space-location), если включено.
+-- 3) Для лун подставляем валидного parent, если не задан.
 
 local function first_proto(name)
   for _,k in ipairs({"planet","space-location"}) do
@@ -97,22 +97,45 @@ local function ensure_sprite(name)
   }}
 end
 
-local function angle_to_orientation(tier)
-  if not tier then return nil end
-  local A = (tier * 360 / 6) % 360
-  local deg = ((270 - A) % 360)
-  return deg / 360
+-- ВВОД: градусы от севера против часовой (0..360)
+-- ВЫВОД: RealOrientation (0..1), от севера по часовой
+local function orientation_from_degrees(A)
+  if A == nil then return nil end
+  local deg_cw = ((360 - (A % 360)) % 360)
+  return deg_cw / 360
 end
 
+-- RealOrientation (0..1, от севера по часовой) -> градусы CCW от севера
+local function degrees_from_orientation(o)
+  if o == nil then return nil end
+  local deg_cw = ((o % 1) + 1) % 1 * 360
+  return ((360 - deg_cw) % 360)
+end
+
+-- angle string -> абсолютные градусы (поддержка +Δ / -Δ / *k)
+local function parse_angle(spec, base_deg)
+  if not spec or spec == "" then return nil end
+  spec = spec:gsub("%s+","")
+  if spec:sub(1,1) == "*" then
+    local k = tonumber(spec:sub(2)); if k then return (base_deg or 0) * k end
+  elseif spec:sub(1,1) == "+" or spec:sub(1,1) == "-" then
+    local d = tonumber(spec);        if d then return (base_deg or 0) + d end
+  else
+    local v = tonumber(spec);        if v then return v end
+  end
+  return nil
+end
+
+-- radius: число | +d | -d | *k
 local function parse_radius(spec, base)
   if not spec or spec == "" then return nil end
   spec = spec:gsub("%s+","")
   if spec:sub(1,1) == "*" then
     local k = tonumber(spec:sub(2)); if k then return (base or 0) * k end
   elseif spec:sub(1,1) == "+" or spec:sub(1,1) == "-" then
-    local d = tonumber(spec); if d then return (base or 0) + d end
+    local d = tonumber(spec);        if d then return (base or 0) + d end
   else
-    local v = tonumber(spec); if v then return v end
+    local v = tonumber(spec);        if v then return v end
   end
   return nil
 end
@@ -121,15 +144,17 @@ end
 local MOON_DEFAULT_PARENT = {
   muluna   = {type="planet", name="nauvis"},
   lignumis = {type="planet", name="nauvis"},
-  ceris    = {type="planet", name="fulgora"}, -- луна Фульгоры
+  cerys    = {type="planet", name="fulgora"},
 }
 
--- читаем «галочку» и значения из любого набора ключей (planet/space-location)
+-- флаг включения: берём любой из возможных ключей
 local function enabled_any(name)
   local a = settings.startup["tr-enable-planet-"..name]
   local b = settings.startup["tr-enable-space-location-"..name]
   return (a and a.value) or (b and b.value) or false
 end
+
+-- значения из настроек (ищем и planet, и space-location варианты)
 local function values_any(kind, name)
   local k1 = "planet"; local k2 = "space-location"
   if kind == "space-location" then k1, k2 = k2, k1 end
@@ -138,12 +163,11 @@ local function values_any(kind, name)
   return (a and a.value or ""), (r and r.value or "")
 end
 
--- тело → применить
+-- ПРИМЕНЕНИЕ к прототипу
 local function apply_for(name)
   ensure_sprite(name)
   local proto, kind = first_proto(name)
   if not proto then return end
-
   if not enabled_any(name) then return end
 
   local aval, rval = values_any(kind, name)
@@ -157,53 +181,73 @@ local function apply_for(name)
     if not ok then proto.orbit.parent = {type=defp.type, name=defp.name} end
   end
 
-  if aval ~= "" then
-    local t = tonumber(aval)
-    if t then
-      local o = angle_to_orientation(t)
-      if o then
-        proto.orientation = o
-        proto.orbit = proto.orbit or {}
-        proto.orbit.orientation = o
-      end
-    end
+-- угол (в градусах, CCW от севера) -> верхний уровень + orbit
+if aval ~= "" then
+  -- текущее значение угла в градусах (CCW), чтобы работать с +Δ/-Δ/*k
+  local cur_deg = degrees_from_orientation(proto.orientation)
+  if not cur_deg and proto.orbit then
+    cur_deg = degrees_from_orientation(proto.orbit.orientation)
   end
+  cur_deg = cur_deg or 0
 
+  local new_deg = parse_angle(aval, cur_deg)
+  if new_deg then
+    new_deg = ((new_deg % 360) + 360) % 360
+    local o = orientation_from_degrees(new_deg)
+    proto.orientation = o
+    proto.orbit = proto.orbit or {}
+    proto.orbit.orientation = o
+  end
+end
+
+  -- радиус -> верхний уровень + orbit
   if rval ~= "" then
     local nd = parse_radius(rval, proto.distance)
     if nd then
-      proto.distance = nd
+      proto.distance = nd              -- ВАЖНО: верхний уровень
       proto.orbit = proto.orbit or {}
       proto.orbit.distance = nd
     end
   end
+end  -- <<< закрыл apply_for ✅
+
+-- Собрать имена из наших настроек (поддерживаем оба типа ключей)
+local function collect_all_names_from_settings()
+  local names = {}
+  local function push(n) names[n] = true end
+  for key, st in pairs(settings.startup) do
+    if type(key) == "string" and key:sub(1,3) == "tr-" and st then
+      local n =
+        key:match("^tr%-enable%-planet%-(.+)$") or
+        key:match("^tr%-enable%-space%-location%-(.+)$") or
+        key:match("^tr%-angle%-planet%-(.+)$") or
+        key:match("^tr%-angle%-space%-location%-(.+)$") or
+        key:match("^tr%-radius%-planet%-(.+)$") or
+        key:match("^tr%-radius%-space%-location%-(.+)$")
+      if n then push(n) end
+    end
+  end
+  local arr = {}
+  for n,_ in pairs(names) do table.insert(arr, n) end
+  table.sort(arr)
+  return arr
 end
 
--- всё, чем умеем управлять
-local BODIES = {
-  -- Vanilla
-  "nauvis","vulcanus","fulgora","gleba","aquilo",
-  -- moons
-  "muluna","lignumis","ceris",
+-- Основной проход: из настроек; если пусто — фолбэк по реальным прототипам
+local names = collect_all_names_from_settings()
+if #names == 0 then
+  -- Фолбэк: соберём имена из реальных прототипов, но применим только если есть наш bool-переключатель
+  for kind, t in pairs{["planet"]=data.raw.planet, ["space-location"]=data.raw["space-location"]} do
+    if t then
+      for n,_ in pairs(t) do
+        local en = settings.startup["tr-enable-planet-"..n] or settings.startup["tr-enable-space-location-"..n]
+        if en then table.insert(names, n) end
+      end
+    end
+  end
+  table.sort(names)
+end
 
-  -- Metal and Stars (systems)
-  "neumann-v","nix","circa","mirandus",
-
-  -- Dyson Sphere
-  "sun-orbit","sun-orbit-close",
-
-  -- Shattered planet & co
-  "shattered-planet","shattered-planet-approach","lost-beyond","solar-system-edge",
-
-  -- Dea Dia system
-  "dea-dia",        -- сама система (если такое имя у прототипа)
-  "prosephina","lemures",
-
-  -- Single-planet mods / Nexuz pack etc.
-  "tenebris","maraxsis","arrakis","tiber","janus","corrundum","naufulglebunusilo","aiur","char",
-  "pelagos","omnia","panglia","rubia","terrapalus","earth","shchierbin","igrys",
-  "moshine","paracelsin","vesta","secretas","frozeta",
-  "froodara","gerkizia","hexalith","ithurice","mickora","nekohaven","quadromire",
-}
-
-for _, name in ipairs(BODIES) do apply_for(name) end
+for _, name in ipairs(names) do
+  apply_for(name)
+end
