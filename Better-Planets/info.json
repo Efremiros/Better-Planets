@@ -7,9 +7,7 @@
   "description": "Переопределяет угол (tier) и радиус (distance) планет и космических точек. Значения настраиваются в меню модов.",
   "dependencies": [
     "base >= 2.0",
-    "? PlanetsLib",
-    "? PlanetsLibTiers",
-    "? Tiered-Solar-System",
-    "? Redrawn-Space-Connections"
+    "PlanetsLib",
+    "PlanetsLibTiers"
   ]
 }
