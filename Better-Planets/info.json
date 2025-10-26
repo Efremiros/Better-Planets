@@ -8,6 +8,10 @@
   "dependencies": [
     "base >= 2.0",
     "PlanetsLib",
-    "PlanetsLibTiers"
+    "PlanetsLibTiers",
+    "? Tiered-Solar-System",
+    "? Starmap_Nexuz",
+    "? dea-dia-system",
+    "? metal-and-stars"
   ]
 }

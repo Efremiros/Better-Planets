@@ -1,14 +1,7 @@
 -- data-final-fixes.lua
--- 1) Спрайты-иконки для настроек [img=tr-picon-<name>]
--- 2) Страховка: нормализуем orientation/orbit.orientation в [0,1) (без PlanetsLib).
--- Ни PlanetsLib.extend, ни PlanetsLib.update здесь НЕ вызываем (см. доки).
-
-local function first_proto(name)
-  for _,k in ipairs({"planet","space-location"}) do
-    local p = data.raw[k] and data.raw[k][name]
-    if p then return p end
-  end
-end
+-- 1) Создаём спрайты [img=tr-picon-<name>] для ВСЕХ планет/локаций + алиасы для звёзд.
+-- 2) НИЧЕГО не трогаем в геометрии (position/orbit) — это важно для PlanetsLib.
+-- 3) В самом конце — лёгкий санитайзер ориентаций (1.0 -> 0.0), чтобы не ловить крэш на границе.
 
 local function pick_from_table(t, depth)
   depth = (depth or 0) + 1
@@ -30,83 +23,98 @@ local function pick_from_table(t, depth)
   return nil
 end
 
-local function ensure_sprite(name)
-  local id = "tr-picon-"..name
-  if data.raw.sprite and data.raw.sprite[id] then return end
-  local p = first_proto(name); if not p then return end
+local function first_proto(name)
+  for _,k in ipairs({"planet","space-location"}) do
+    local p = data.raw[k] and data.raw[k][name]
+    if p then return p end
+  end
+end
 
-  local filename, size, mm
-  if p.starmap_icon then
-    if type(p.starmap_icon) == "string" then
-      filename = p.starmap_icon
-      size = p.starmap_icon_size or p.icon_size or 64
-      mm = p.icon_mipmaps or 0
+local function best_icon_for(proto)
+  if not proto then return nil end
+  -- приоритет: starmap_icon -> icon -> icons -> любой слой внутри
+  if proto.starmap_icon then
+    if type(proto.starmap_icon) == "string" then
+      return proto.starmap_icon, (proto.starmap_icon_size or proto.icon_size or 64), (proto.icon_mipmaps or 0)
     else
-      filename, size, mm = pick_from_table(p.starmap_icon)
-      size = size or p.starmap_icon_size or p.icon_size or 64
+      local f,s,m = pick_from_table(proto.starmap_icon)
+      return f, (s or proto.starmap_icon_size or proto.icon_size or 64), m
     end
   end
-  if (not filename) and p.icon then
-    if type(p.icon) == "string" then
-      filename = p.icon
-      size = p.icon_size or 64
-      mm = p.icon_mipmaps or 0
+  if proto.icon then
+    if type(proto.icon) == "string" then
+      return proto.icon, (proto.icon_size or 64), (proto.icon_mipmaps or 0)
     else
-      filename, size, mm = pick_from_table(p.icon)
-      size = size or p.icon_size or 64
+      local f,s,m = pick_from_table(proto.icon)
+      return f, (s or proto.icon_size or 64), m
     end
   end
-  if (not filename) and p.icons and p.icons[1] then
-    local ic = p.icons[1]
+  if proto.icons and proto.icons[1] then
+    local ic = proto.icons[1]
     if type(ic.icon) == "string" then
-      filename = ic.icon
-      size = ic.icon_size or p.icon_size or 64
-      mm = ic.icon_mipmaps or p.icon_mipmaps or 0
+      return ic.icon, (ic.icon_size or proto.icon_size or 64), (ic.icon_mipmaps or proto.icon_mipmaps or 0)
     else
-      filename, size, mm = pick_from_table(ic)
-      size = size or ic.icon_size or p.icon_size or 64
+      local f,s,m = pick_from_table(ic)
+      return f, (s or ic.icon_size or proto.icon_size or 64), m
     end
   end
-  if not filename then filename, size, mm = pick_from_table(p) end
-  if not filename then return end
+  local f,s,m = pick_from_table(proto)
+  return f, (s or proto.icon_size or 64), m
+end
 
+local function ensure_sprite_from_proto(target_sprite_name, source_proto_name)
+  if data.raw.sprite and data.raw.sprite[target_sprite_name] then return true end
+  local src = first_proto(source_proto_name)
+  if not src then return false end
+  local filename, size, mm = best_icon_for(src)
+  if not filename then return false end
   data:extend{{
     type = "sprite",
-    name = id,
+    name = target_sprite_name,
     filename = filename,
     size = tonumber(size) or 64,
     mipmap_count = tonumber(mm) or 0,
     flags = {"gui-icon"}
   }}
+  return true
 end
 
--- спрайты для всех имён из настроек
-local names = {}
-for k,_ in pairs(settings.startup) do
-  if type(k)=="string" and k:sub(1,3)=="tr-" then
-    local n = k:match("^tr%-%w+%-%w+%-(.+)$")
-    if n then names[n]=true end
+-- 1) Базовые спрайты: для КАЖДОГО прототипа создаём [img=tr-picon-<его_имя>]
+for _, kind in ipairs({"planet","space-location"}) do
+  for name,_ in pairs(data.raw[kind] or {}) do
+    ensure_sprite_from_proto("tr-picon-"..name, name)
   end
 end
-for n,_ in pairs(names) do ensure_sprite(n) end
 
--- safety: нормализуем ориентации в [0,1)
+-- 2) Алиасы для звёзд, как просили:
+--    star-dea-dia -> иконка от dea-dia-system-edge
+--    nexuz-background -> иконка от sye-nexuz-sw
+--    redstar -> иконка от calidus-senestella-gate-senestella
+local STAR_ALIAS = {
+  ["star-dea-dia"]     = "dea-dia-system-edge",
+  ["nexuz-background"] = "sye-nexuz-sw",
+  ["redstar"]          = "calidus-senestella-gate-senestella",
+}
+for star, src in pairs(STAR_ALIAS) do
+  ensure_sprite_from_proto("tr-picon-"..star, src)
+end
+
+-- === sanity: только привести ориентации к полуинтервалу [0,1), ничего больше не трогаем ===
 local function norm01(x)
-  if x == nil then return nil end
-  local r = x - math.floor(x)
-  if r < 0 then r = r + 1 end
-  if r >= 1 then r = 0 end
-  return r
+  if type(x) ~= "number" then return x end
+  x = x - math.floor(x)
+  if x < 0 then x = x + 1 end
+  if x >= 1 then x = 0 end  -- 1.0 -> 0.0
+  return x
 end
 
 for _, kind in ipairs({"planet","space-location"}) do
-  local bucket = data.raw[kind]
-  if bucket then
-    for _, proto in pairs(bucket) do
-      if proto.orientation ~= nil then proto.orientation = norm01(proto.orientation) end
-      if proto.orbit and proto.orbit.orientation ~= nil then
-        proto.orbit.orientation = norm01(proto.orbit.orientation)
-      end
+  for _, proto in pairs(data.raw[kind] or {}) do
+    if proto.orientation ~= nil then
+      proto.orientation = norm01(proto.orientation)
+    end
+    if proto.orbit and proto.orbit.orientation ~= nil then
+      proto.orbit.orientation = norm01(proto.orbit.orientation)
     end
   end
 end
