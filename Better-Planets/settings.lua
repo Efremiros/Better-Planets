@@ -1,9 +1,3 @@
--- settings.lua
--- Единые ключи: tr-enable-<name>, tr-radius-<name>, tr-angle-<name>
--- Порядок, иконка после имени, имя берём из localised_name прототипа.
--- Для звёзд есть ручные названия и альтернативные иконки.
-
--- дефолтные радиусы (как прежде)
 local DEFAULT_R = {
   aiur=204.3, aquilo=35.0, arig=11.9, arrakis=187.6,
   ["calidus-senestella-gate-calidus"]=20.0,
@@ -26,7 +20,6 @@ local DEFAULT_R = {
   ["sye-nauvis-ne"]=0.0, ["nexuz-background"]=0.0, ["star-dea-dia"]=0.0, redstar=0.0
 }
 
--- дефолтные углы (только для указанного набора)
 local DEFAULT_ANGLE = {
   nauvis=54,  vulcanus=97.2, fulgora=129.6, gleba=189, aquilo=270,
   gerkizia=27, quadromire=27, mickora=54, pelagos=81, froodara=97.2,
@@ -38,16 +31,25 @@ local DEFAULT_ANGLE = {
   ["slp-solar-system-sun"]=10.8, ["slp-solar-system-sun2"]=10.8,
 }
 
--- желаемый порядок (как ты прислал)
 local ORDER = {
-  "nauvis","muluna","lignumis","vulcanus","fulgora","cerys","gleba","terrapalus","aquilo",
-  "froodara","gerkizia","arig","castra","cubium","hexalith","igrys","hyarion","mickora",
-  "moshine","nekohaven","omnia","panglia","paracelsin","pelagos","quadromire","rubia",
-  "shchierbin","secretas","frozeta","tapatrion","ithurice","tchekor","vesta","zzhora",
-  "corruption","slp-solar-system-sun","slp-solar-system-sun2","solar-system-edge",
+  "nauvis","muluna","lignumis",
+  "vulcanus","froodara","zzhora",
+  "fulgora","cerys","tchekor",
+  "gleba","terrapalus","gerkizia","quadromire",
+  "moshine",
+  "igrys","hyarion",
+  "rubia",
+  "arig","castra","shchierbin",
+  "vesta","hexalith","nekohaven",
+  "mickora",
+  "panglia","omnia","paracelsin","pelagos",
+  "cubium","aquilo","tapatrion","ithurice",
+  "secretas","frozeta",
+  "corruption",
+  "slp-solar-system-sun","slp-solar-system-sun2","solar-system-edge",
   "shattered-planet","skewer_shattered_planet","skewer_lost_beyond",
-  "sye-nauvis-ne","sye-nexuz-sw","nexuz-background","arrakis","aiur","char","earth",
-  "corrundum","maraxsis","maraxsis-trench","tiber","tenebris",
+  "sye-nauvis-ne","sye-nexuz-sw","nexuz-background",
+  "arrakis","aiur","char","earth","corrundum","maraxsis","maraxsis-trench","tiber","tenebris",
   "star-dea-dia","dea-dia-system-edge","planet-dea-dia","prosephina","lemures",
   "calidus-senestella-gate-calidus","calidus-senestella-gate-senestella",
   "redstar","shipyard","mirandus-a","nix","ringworld"
