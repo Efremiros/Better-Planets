@@ -118,3 +118,23 @@ for _, kind in ipairs({"planet","space-location"}) do
     end
   end
 end
+
+-- === Disable vanilla orbit rings for non-vanilla star systems ===
+-- Ваниль рисует кольца вокруг центрального солнца (0,0).
+-- Если у объекта parent не "star", отключаем его ванильное кольцо.
+do
+  local planets   = data.raw.planet or {}
+  local locations = data.raw["space-location"] or {}
+
+  local function disable_orbit_if_nonvanilla_parent(proto)
+    if not proto then return end
+    local orb = proto.orbit
+    local par = orb and orb.parent
+    if par and par.type == "space-location" and par.name ~= "star" then
+      proto.draw_orbit = false
+    end
+  end
+
+  for _, proto in pairs(planets)   do disable_orbit_if_nonvanilla_parent(proto) end
+  for _, proto in pairs(locations) do disable_orbit_if_nonvanilla_parent(proto) end
+end
