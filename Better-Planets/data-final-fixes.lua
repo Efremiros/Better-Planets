@@ -138,3 +138,29 @@ do
   for _, proto in pairs(planets)   do disable_orbit_if_nonvanilla_parent(proto) end
   for _, proto in pairs(locations) do disable_orbit_if_nonvanilla_parent(proto) end
 end
+
+-- === Safety net: управляем кольцами только по факту подгруппы "satellites" ===
+do
+  local candidates = {
+    tchekor = true,
+    froodara = true, zzhora = true,
+    gerkizia = true, quadromire = true,
+    tapatrion = true, ithurice = true,
+    nekohaven = true, hexalith = true,
+    mickora = true, corruption = true,
+  }
+
+  for _, kind in ipairs({"planet","space-location"}) do
+    for name, proto in pairs(data.raw[kind] or {}) do
+      if candidates[name] and proto then
+        local is_satellite = (proto.subgroup == "satellites")
+        -- если стал спутником → кольцо отключаем; иначе включаем
+        proto.draw_orbit = not is_satellite and true or false
+      end
+    end
+  end
+
+  -- panglia — не спутник → кольцо включено
+  local p = (data.raw.planet and data.raw.planet["panglia"]) or (data.raw["space-location"] and data.raw["space-location"]["panglia"])
+  if p then p.draw_orbit = true end
+end

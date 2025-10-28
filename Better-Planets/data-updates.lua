@@ -133,20 +133,27 @@ do
   end
 end
 
--- ===== B) Moon assignments & Panglia detaching =====
--- Переназначаем родителя через PlanetsLib.update, синхронизируя orbit/корневые поля и обнуляя position.
--- Дополнительно подправляем "magnitude" как простой визуальный масштаб на звёздной карте.
+-- ===== B) Moon assignments & Panglia detaching (SAFE) =====
+-- Делает луны ТОЛЬКО если родитель реально существует. Иначе объект остаётся как есть (без subgroup="satellites").
+-- Panglia возвращаем к солнцу только если она есть. Все операции — через PlanetsLib.update.
 
-local function norm01(x)
-  if x == nil then return nil end
-  x = x - math.floor(x)
-  if x < 0 then x = x + 1 end
-  if x >= 1 then x = 0 end
-  return x
+local function has_proto(name)
+  return (data.raw.planet and data.raw.planet[name])
+      or (data.raw["space-location"] and data.raw["space-location"][name])
+end
+
+local function proto_of(name)
+  return (data.raw.planet and data.raw.planet[name])
+      or (data.raw["space-location"] and data.raw["space-location"][name])
+end
+
+local function kind_of(name)
+  if data.raw.planet and data.raw.planet[name] then return "planet" end
+  if data.raw["space-location"] and data.raw["space-location"][name] then return "space-location" end
+  return nil
 end
 
 local function safe_parent_spec(name)
-  -- Для планет используем {type="planet", name=...}, для звёзд — {type="space-location", name=...}
   if data.raw.planet and data.raw.planet[name] then
     return {type="planet", name=name}
   end
@@ -156,91 +163,111 @@ local function safe_parent_spec(name)
   return nil
 end
 
+local function set_magnitude(name, factor)
+  local p = proto_of(name); if not p then return end
+  local base = tonumber(p.magnitude) or 1.0
+  p.magnitude = math.max(0.3, math.min(4.0, base * factor))
+end
+
+-- единый безопасный update через PlanetsLib
 local function lib_update_orbit(kind, name, parent_spec, or01, dist)
   local lib = rawget(_G, "PlanetsLib")
   if not (lib and lib.update and type(lib.update)=="function") then return false end
-  if not parent_spec then return false end
+  if not (parent_spec and parent_spec.type and parent_spec.name and has_proto(parent_spec.name)) then return false end
   local proto = data.raw[kind] and data.raw[kind][name]; if not proto then return false end
 
-  -- зафиксировать родителя прямо в прототипе
+  -- зафиксировать родителя и полярные поля, position обнуляем
   proto.orbit = proto.orbit or {}
-  proto.orbit.parent = parent_spec
-
-  local use_or = norm01(or01 or proto.orbit.orientation or proto.orientation or 0)
-  local use_d  = dist or proto.orbit.distance or proto.distance or 0
-
+  proto.orbit.parent      = {type=parent_spec.type, name=parent_spec.name}
+  local use_or = (or01 ~= nil) and ((or01 - math.floor(or01)) % 1) or ((proto.orbit.orientation or proto.orientation or 0) % 1)
+  local use_d  = (dist ~= nil) and dist or (proto.orbit.distance or proto.distance or 0)
   proto.orbit.orientation = use_or
   proto.orbit.distance    = use_d
   proto.orientation       = use_or
   proto.distance          = use_d
-
-  proto.position = nil  -- позиция не должна быть «авторитетной»
+  proto.position          = nil
 
   lib:update{
     type  = kind,
     name  = name,
-    orbit = { parent = parent_spec, orientation = use_or, distance = use_d }
+    orbit = { parent = proto.orbit.parent, orientation = use_or, distance = use_d }
   }
   return true
 end
 
-local function set_magnitude(name, factor)
-  -- Меняем визуальный масштаб; если величины нет — задаём от 1.0
-  local p = (data.raw.planet and data.raw.planet[name]) or (data.raw["space-location"] and data.raw["space-location"][name])
-  if not p then return end
-  local base = p.magnitude or 1.0
-  p.magnitude = math.max(0.3, math.min(4.0, base * factor))
-end
-
--- карты переназначений
+-- назначаем «кандидатов в луны»: child -> parent (родитель ДОЛЖЕН быть планетой)
 local MOONS = {
-  {child="tchekor",   parent="fulgora"},
-  {child="froodara",  parent="vulcanus"},
-  {child="zzhora",    parent="vulcanus"},
-  {child="gerkizia",  parent="gleba"},
-  {child="quadromire",parent="gleba"},
-  {child="nekohaven", parent="vesta"},
-  {child="hexalith",  parent="vesta"},
+  {child="tchekor",    parent="fulgora"},
+  {child="froodara",   parent="vulcanus"},
+  {child="zzhora",     parent="vulcanus"},
+  {child="gerkizia",   parent="gleba"},
+  {child="quadromire", parent="gleba"},
+  {child="tapatrion",   parent="secretas"},
+  {child="ithurice",   parent="secretas"},
+  {child="nekohaven",  parent="vesta"},
+  {child="hexalith",   parent="vesta"},
+  {child="mickora",   parent="vesta"},
+  {child="corruption",   parent="vesta"},
 }
 
-local DETACH_TO_SUN = { "panglia" } -- вернуть к ванильному солнцу
+-- результаты успешного «оулунивания» (используем в блоке E)
+local MOON_DONE = {}
 
--- применить переназначения (луны)
+-- применяем перенос в луны ТОЛЬКО при наличии и ребёнка, и родителя
 do
-  for _, item in ipairs(MOONS) do
-    local child, parent = item.child, item.parent
-    -- определяем типы прототипов
-    local kind = (data.raw.planet and data.raw.planet[child]) and "planet" or ((data.raw["space-location"] and data.raw["space-location"][child]) and "space-location" or nil)
-    if kind then
-      local proto = data.raw[kind][child]
-      local par_spec = safe_parent_spec(parent)
-      if par_spec then
-        local or0 = (proto.orbit and proto.orbit.orientation) or proto.orientation or 0
-        local d0  = (proto.orbit and proto.orbit.distance)    or proto.distance    or 0
-        -- Просто переносим орбиту как есть (сохраняем угол/радиус); при необходимости можно добавить коэффициент для "лунных" дистанций.
-        lib_update_orbit(kind, child, par_spec, or0, d0)
-        -- сделать визуально меньше
+  for _, it in ipairs(MOONS) do
+    local child, parent = it.child, it.parent
+    local ck, pk = kind_of(child), kind_of(parent)
+    if ck and (pk == "planet" or pk == "space-location") then
+      local child_proto = proto_of(child)
+      local or0 = (child_proto.orbit and child_proto.orbit.orientation) or child_proto.orientation or 0
+      local d0  = (child_proto.orbit and child_proto.orbit.distance)    or child_proto.distance    or 0
+      local ok = lib_update_orbit(ck, child, safe_parent_spec(parent), or0, d0)
+      if ok then
+        -- только успешно переназначенным выставляем satellites и уменьшаем размер
+        child_proto.subgroup = "satellites"
+        child_proto.redrawn_connections_exclude = true
         set_magnitude(child, 0.7)
+        MOON_DONE[child] = parent
+      else
+        -- фоллбек: ничего не меняем, subgroup НЕ трогаем (пусть остаётся обычной планетой)
+        MOON_DONE[child] = false
       end
+    else
+      -- родителя нет → пропускаем; subgroup не трогаем
+      MOON_DONE[it.child] = false
     end
   end
 end
 
--- отсоединить panglia от gleba → вернуть на солнце
+-- panglia: возвращаем на солнце ТОЛЬКО если она есть
 do
   local name = "panglia"
-  local kind = (data.raw.planet and data.raw.planet[name]) and "planet" or ((data.raw["space-location"] and data.raw["space-location"][name]) and "space-location" or nil)
-  if kind then
-    local proto = data.raw[kind][name]
-    local par_spec = {type="space-location", name="star"} -- ванильное солнце
-    local or0 = (proto.orbit and proto.orbit.orientation) or proto.orientation or 0
-    local d0  = (proto.orbit and proto.orbit.distance)    or proto.distance    or 0
-    lib_update_orbit(kind, name, par_spec, or0, d0)
+  local k = kind_of(name)
+  if k then
+    local proto = proto_of(name)
+    -- убираем спутниковость ВСЕГДА (если была)
+    if proto.subgroup == "satellites" then proto.subgroup = nil end
+    proto.redrawn_connections_exclude = false
+    -- если есть центральное солнце — переносим на star
+    if data.raw["space-location"] and data.raw["space-location"]["star"] then
+      local or0 = (proto.orbit and proto.orbit.orientation) or proto.orientation or 0
+      local d0  = (proto.orbit and proto.orbit.distance)    or proto.distance    or 0
+      lib_update_orbit(k, name, {type="space-location", name="star"}, or0, d0)
+    end
     -- сделать визуально больше
-    set_magnitude(name, 1.3)
+    set_magnitude(name, 3.0)
   end
 end
 
+    set_magnitude("aquilo", 2.0)
+    set_magnitude("hyarion", 2.5)
+    set_magnitude("arrakis", 3.5)
+    set_magnitude("maraxsis", 3.0)
+    set_magnitude("char", 2.0)
+    set_magnitude("omnia", 2.0)
+    set_magnitude("slp-solar-system-sun", 0.8)
+    set_magnitude("slp-solar-system-sun2", 0.8)
 
 -- ===== C) Space connections correctness: mark moons as satellites, unmark panglia =====
 -- RSC ориентируется на subgroup "satellites" для спутников: тогда он оставляет только связь "луна ↔ родитель".
@@ -254,40 +281,38 @@ end
 -- те, кого мы сделали лунами:
 local MOON_NAMES = {
   "tchekor",
-  "froodara", "zzhora",
-  "gerkizia", "quadromire",
-  "nekohaven", "hexalith",
+  "froodara", "zzhora", "gerkizia", "quadromire",
+  "tapatrion", "ithurice",
+  "nekohaven", "hexalith", "mickora", "corruption",
 }
 
 for _, n in ipairs(MOON_NAMES) do
-  set_subgroup(n, "satellites")     -- пометили как спутник → RSC оставит только связь с родителем
+  if MOON_DONE and MOON_DONE[n] then
+    set_subgroup(n, "satellites")
+  else
+    set_subgroup(n, nil)
+  end
 end
+
 
 -- panglia больше НЕ спутник:
 set_subgroup("panglia", nil)         -- убираем из satellites → RSC отдаст ей обычные межпланетные связи
 
 
--- ===== D) Space connections: спутники ↔ только родитель, panglia → обычные маршруты =====
--- Спутники (subgroup="satellites") RSC исключает из перерисовки -> их существующие связи остаются как есть.
--- Поэтому: удаляем им ВСЕ старые связи и создаём ровно одну "родитель ↔ луна".
--- Для panglia снимаем "спутниковость"/исключение и удаляем старые связи — RSC построит обычную сеть.
+-- ===== D) Space connections: only parent ↔ moon, fixed length; panglia → normal network (SAFE) =====
+-- Создаём/чистим связи ТОЛЬКО для тех лун, что реально стали лунами (MOON_DONE[child] == <parent_name>).
+-- Для panglia очищаем старые связи и отдаём на отрисовку RSC (если мод есть) как обычную планету.
 
-local function proto_of(name)
-  return (data.raw.planet and data.raw.planet[name]) or (data.raw["space-location"] and data.raw["space-location"][name])
+local function proto_exists_space_connection()
+  return data.raw["space-connection"] ~= nil
 end
 
-local function kind_of(name)
-  if data.raw.planet and data.raw.planet[name] then return "planet" end
-  if data.raw["space-location"] and data.raw["space-location"][name] then return "space-location" end
-  return nil
-end
-
--- Удаляем все space-connection, где участвует кто-то из множества nameset (имена — СТРОКИ)
 local function del_space_connections_involving(nameset)
-  local sc = data.raw["space-connection"] or {}
+  if not proto_exists_space_connection() then return end
+  local sc = data.raw["space-connection"]
   local to_del = {}
   for sc_name, def in pairs(sc) do
-    local a = def.from  -- строки!
+    local a = def.from  -- строки
     local b = def.to
     if (a and nameset[a]) or (b and nameset[b]) then
       table.insert(to_del, sc_name)
@@ -296,11 +321,60 @@ local function del_space_connections_involving(nameset)
   for _, n in ipairs(to_del) do sc[n] = nil end
 end
 
--- === helper: взять иконку для узла (планета/локация) ===
+-- === индивидуальные длины: кодовые оверрайды ===
+local MOON_CONNECTION_LENGTHS = {
+  tchekor    = 4400,
+
+  froodara   = 3000,
+  zzhora     = 3500,
+
+  gerkizia   = 5000,
+  quadromire = 3800,
+
+  tapatrion = 9000,
+  ithurice = 12000,
+
+  nekohaven  = 8000,
+  hexalith   = 10000,
+  mickora   = 12000,
+  corruption   = 20000,
+}
+
+-- дефолт, если нет ни настройки, ни оверрайда
+local DEFAULT_MOON_CONNECTION_LENGTH_KM = 3000
+
+-- безопасно прочитаем число из стартап-настройки
+local function setting_moon_length_or_nil(child)
+  local key = "tr-conn-length-" .. child
+  local st = settings and settings.startup and settings.startup[key]
+  if not st then return nil end
+  local v = tonumber(st.value)
+  if not v then return nil end
+  -- клампы на всякий случай
+  if v < 100 then v = 100 end
+  if v > 20000 then v = 20000 end
+  return math.floor(v + 0.5)
+end
+
+-- финальное определение длины: настройка → таблица → дефолт
+local function resolve_moon_connection_length(child_name)
+  local v = setting_moon_length_or_nil(child_name)
+  if v then return v end
+  v = MOON_CONNECTION_LENGTHS[child_name]
+  if v then
+    v = tonumber(v)
+    if v then
+      if v < 100 then v = 100 end
+      if v > 20000 then v = 20000 end
+      return math.floor(v + 0.5)
+    end
+  end
+  return DEFAULT_MOON_CONNECTION_LENGTH_KM
+end
+
 local function resolve_icon_for(name)
   local p = proto_of(name)
   if not p then return "__core__/graphics/empty.png", 1 end
-  -- приоритет: starmap_icon -> icon -> icons[1].icon
   if p.starmap_icon then
     if type(p.starmap_icon) == "string" then
       return p.starmap_icon, (p.starmap_icon_size or p.icon_size or 64)
@@ -308,87 +382,50 @@ local function resolve_icon_for(name)
       return p.starmap_icon.filename, (p.starmap_icon.size or p.icon_size or 64)
     end
   end
-  if p.icon then
-    return p.icon, (p.icon_size or 64)
-  end
+  if p.icon then return p.icon, (p.icon_size or 64) end
   if p.icons and p.icons[1] and p.icons[1].icon then
     return p.icons[1].icon, (p.icons[1].icon_size or p.icon_size or 64)
   end
   return "__core__/graphics/empty.png", 1
 end
 
--- === helper: оценка длины маршрута (км) для parent↔child ===
-local function connection_length_for(parent_name, child_name)
-  local child = proto_of(child_name)
-  if child and child.orbit and child.orbit.distance then
-    local d = tonumber(child.orbit.distance) or 0
-    if d > 0 then return math.floor(d + 0.5) end
-  end
-  return 100 -- безопасный фолбэк
-end
-
--- === REPLACE this: create connection with required icon fields ===
+-- создаём связь "родитель ↔ луна" со своей длиной и иконкой
 local function add_space_connection_unique(parent_name, child_name, keep_flag)
-  if not (proto_of(parent_name) and proto_of(child_name)) then return end
+  if not (proto_exists_space_connection() and has_proto(parent_name) and has_proto(child_name)) then return end
   local name = ("bp-conn-%s__%s"):format(parent_name, child_name)
-  if data.raw["space-connection"] and data.raw["space-connection"][name] then return end
+  if data.raw["space-connection"][name] then return end
 
-  local length_km = connection_length_for(parent_name, child_name)
-  local icon, icon_size = resolve_icon_for(child_name) -- для коннекта берём иконку «ребёнка»
+  local icon, icon_size = resolve_icon_for(child_name)
+  local length_km = resolve_moon_connection_length(child_name)
 
   data:extend{{
     type   = "space-connection",
     name   = name,
-    from   = parent_name,   -- ОБЯЗАТЕЛЬНО СТРОКИ
+    from   = parent_name,
     to     = child_name,
-    length = length_km,     -- чтобы RSC не падал при сортировке
-    icon   = icon,          -- ← добавлено
-    icon_size = icon_size,  -- ← добавлено
+    length = length_km,
+    icon   = icon,
+    icon_size = icon_size,
     redrawn_connections_keep = keep_flag ~= false
   }}
 end
 
--- 1) Карта "луна → родитель-планета"
-local MOON_PARENT = {
-  tchekor    = "fulgora",
-  froodara   = "vulcanus",
-  zzhora     = "vulcanus",
-  gerkizia   = "gleba",
-  quadromire = "gleba",
-  nekohaven  = "vesta",
-  hexalith   = "vesta",
-}
-
--- 2) Помечаем лун как satellites и исключаем их из редроинга RSC
-for child,_ in pairs(MOON_PARENT) do
-  local p = proto_of(child)
-  if p then
-    p.subgroup = "satellites"
-    p.redrawn_connections_exclude = true  -- страховка; у satellites и так true по умолчанию
-  end
-end
-
--- 3) Panglia — больше НЕ спутник и НЕ исключение
-do
-  local p = proto_of("panglia")
-  if p then
-    if p.subgroup == "satellites" then p.subgroup = nil end
-    p.redrawn_connections_exclude = false
-  end
-end
-
--- 4) Удаляем существующие связи у всех наших лун и у panglia
+-- Сначала удаляем ВСЕ старые связи у тех, кто стал лунами, и у panglia (если есть)
 do
   local rm = {}
-  for child,_ in pairs(MOON_PARENT) do rm[child] = true end
-  rm["panglia"] = true
-  del_space_connections_involving(rm)
+  for child, parent in pairs(MOON_DONE) do
+    if parent then rm[child] = true end   -- только реально «оулуневшие»
+  end
+  if has_proto("panglia") then rm["panglia"] = true end
+  if next(rm) then del_space_connections_involving(rm) end
 end
 
--- 5) Добавляем по ОДНОЙ связи "родитель ↔ луна" (строки!)
-for child, parent in pairs(MOON_PARENT) do
-  if kind_of(parent) == "planet" and proto_of(child) then
-    add_space_connection_unique(parent, child, true)
+-- Затем добавляем по ОДНОЙ связи «родитель ↔ луна» ТОЛЬКО тем, кто реально стал луной
+do
+  for child, parent in pairs(MOON_DONE) do
+    if kind_of(parent) and proto_of(child) then
+      add_space_connection_unique(parent, child, true)
+    end
   end
 end
 
