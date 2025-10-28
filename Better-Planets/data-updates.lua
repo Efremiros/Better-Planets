@@ -61,7 +61,17 @@ local function has_parent_space_location(proto)
   return parent_exists(par)
 end
 
--- ====== ХЕЛПЕРЫ — ключевой фикс визуальных колец ======
+local function size_factor(name)
+  local st = settings.startup["tr-scale-"..name]
+  if not st then return nil end
+  local s = tostring(st.value or ""):gsub(",",".")
+  if s == "" then return nil end -- пусто = не трогаем размер
+  local v = tonumber(s)
+  if not v then return nil end
+  if v < 0.2 then v = 0.2 end
+  if v > 5.0 then v = 5.0 end
+  return v
+end
 
 -- Единая точка: зафиксировать orbit.parent в самом прототипе, синхронизировать поля и вызвать PlanetsLib.update
 local function lib_update_orbit(kind, name, parent, or01, dist)
@@ -163,12 +173,6 @@ local function safe_parent_spec(name)
   return nil
 end
 
-local function set_magnitude(name, factor)
-  local p = proto_of(name); if not p then return end
-  local base = tonumber(p.magnitude) or 1.0
-  p.magnitude = math.max(0.3, math.min(4.0, base * factor))
-end
-
 -- единый безопасный update через PlanetsLib
 local function lib_update_orbit(kind, name, parent_spec, or01, dist)
   local lib = rawget(_G, "PlanetsLib")
@@ -227,7 +231,6 @@ do
         -- только успешно переназначенным выставляем satellites и уменьшаем размер
         child_proto.subgroup = "satellites"
         child_proto.redrawn_connections_exclude = true
-        set_magnitude(child, 0.7)
         MOON_DONE[child] = parent
       else
         -- фоллбек: ничего не меняем, subgroup НЕ трогаем (пусть остаётся обычной планетой)
@@ -255,19 +258,8 @@ do
       local d0  = (proto.orbit and proto.orbit.distance)    or proto.distance    or 0
       lib_update_orbit(k, name, {type="space-location", name="star"}, or0, d0)
     end
-    -- сделать визуально больше
-    set_magnitude(name, 3.0)
   end
 end
-
-    set_magnitude("aquilo", 2.0)
-    set_magnitude("hyarion", 2.5)
-    set_magnitude("arrakis", 3.5)
-    set_magnitude("maraxsis", 3.0)
-    set_magnitude("char", 2.0)
-    set_magnitude("omnia", 2.0)
-    set_magnitude("slp-solar-system-sun", 0.8)
-    set_magnitude("slp-solar-system-sun2", 0.8)
 
 -- ===== C) Space connections correctness: mark moons as satellites, unmark panglia =====
 -- RSC ориентируется на subgroup "satellites" для спутников: тогда он оставляет только связь "луна ↔ родитель".
@@ -504,3 +496,154 @@ local function for_each_configured_name(apply_fn)
 end
 
 for_each_configured_name(apply_object)
+
+-- === Финальный проход: применить масштаб (magnitude) ко всем включённым ===
+do
+  local function size_factor_final(name)
+    local st = settings.startup["tr-scale-"..name]
+    if not st then return nil end
+    local s = tostring(st.value or ""):gsub(",",".")
+    if s == "" then return nil end  -- пусто = не менять
+    local v = tonumber(s); if not v then return nil end
+    if v < 0.2 then v = 0.2 end
+    if v > 5.0 then v = 5.0 end
+    return v
+  end
+
+  for _, kind in ipairs({"planet","space-location"}) do
+    for name, proto in pairs(data.raw[kind] or {}) do
+      local opt = settings.startup["tr-enable-"..name]
+      if opt and opt.value then
+        local f = size_factor_final(name)
+        if f then
+          local base = tonumber(proto.magnitude) or 1.0
+          proto.magnitude = math.max(0.3, math.min(5.0, base * f))
+        end
+      end
+    end
+  end
+end
+
+-- === Better-Planets: Orbit sprites via PlanetsLib (moons & non-sun parents) ===
+-- Ничего про орбиты НЕ меняем в data-final-fixes.lua.
+
+do
+  -- Фактические размеры твоих PNG на диске (квадратные):
+  local RINGS = {
+    { r=1,    file="__Better-Planets__/graphics/orbits/orbit-unit-ring1.png",   size=262  },
+    { r=2,    file="__Better-Planets__/graphics/orbits/orbit-unit-ring2.png",   size=518  },
+    { r=3,    file="__Better-Planets__/graphics/orbits/orbit-unit-ring3.png",   size=774  },
+    { r=4,    file="__Better-Planets__/graphics/orbits/orbit-unit-ring4.png",   size=1030 },
+    { r=5,    file="__Better-Planets__/graphics/orbits/orbit-unit-ring5.png",   size=1286 },
+    { r=6,    file="__Better-Planets__/graphics/orbits/orbit-unit-ring6.png",   size=1541 },
+    { r=7,    file="__Better-Planets__/graphics/orbits/orbit-unit-ring7.png",   size=1798 },
+    { r=8,    file="__Better-Planets__/graphics/orbits/orbit-unit-ring8.png",   size=4096 },
+    { r=9,    file="__Better-Planets__/graphics/orbits/orbit-unit-ring9.png",   size=4096 },
+    { r=10,   file="__Better-Planets__/graphics/orbits/orbit-unit-ring10.png",  size=4096 },
+    { r=20,   file="__Better-Planets__/graphics/orbits/orbit-unit-ring20.png",  size=4096 },
+    { r=30,   file="__Better-Planets__/graphics/orbits/orbit-unit-ring30.png",  size=4096 },
+    { r=40,   file="__Better-Planets__/graphics/orbits/orbit-unit-ring40.png",  size=4096 },
+    { r=50,   file="__Better-Planets__/graphics/orbits/orbit-unit-ring50.png",  size=4096 },
+    { r=60,   file="__Better-Planets__/graphics/orbits/orbit-unit-ring60.png",  size=4096 },
+    { r=70,   file="__Better-Planets__/graphics/orbits/orbit-unit-ring70.png",  size=4096 },
+    { r=80,   file="__Better-Planets__/graphics/orbits/orbit-unit-ring80.png",  size=4096 },
+    { r=90,   file="__Better-Planets__/graphics/orbits/orbit-unit-ring90.png",  size=4096 },
+    { r=100,  file="__Better-Planets__/graphics/orbits/orbit-unit-ring100.png", size=4096 },
+  }
+
+  -- Эталон (из генератора PlanetsLib): r=100, png=4096px, scale:
+  local REF_R, REF_PX, REF_SCALE = 100, 4096, 1.5626831054687502
+
+  local function is_central_star(par)
+    return par and par.type == "space-location" and par.name == "star"
+  end
+
+  -- Предпочитаем НЕ 4096, если можно (устойчивее к лимитам атласа):
+  -- 1) ищем max r_base ≤ dist среди НЕ-4096 (1..7),
+  -- 2) если не нашли (dist очень большой) — берём ближайшее из 4096 (8..100) по полу.
+  local function pick_base(dist)
+    if type(dist) ~= "number" or dist <= 0 then return nil end
+
+    local best_small -- 1..7
+    for i=1,7 do
+      local t = RINGS[i]
+      if t.r <= dist and (not best_small or t.r > best_small.r) then
+        best_small = t
+      end
+    end
+    if best_small then return best_small end
+
+    local best_big -- 8..end
+    for i=8,#RINGS do
+      local t = RINGS[i]
+      if t.r <= dist and (not best_big or t.r > best_big.r) then
+        best_big = t
+      end
+    end
+    if best_big then return best_big end
+
+    -- dist < 1 → берём самый маленький
+    return RINGS[1]
+  end
+
+  local function ensure_orbit_fields(proto)
+    proto.orbit = proto.orbit or {}
+    if proto.distance    and proto.orbit.distance    == nil then proto.orbit.distance    = proto.distance    end
+    if proto.orientation and proto.orbit.orientation == nil then proto.orbit.orientation = proto.orientation end
+  end
+
+  -- Универсальный масштаб от эталона (независимо от пиксельного размера выбранного PNG):
+  -- scale = REF_SCALE * (dist / REF_R) * (REF_PX / base.size)
+  local function compute_scale(dist, base_size)
+    if not (dist and dist > 0 and base_size and base_size > 0) then return nil end
+    return REF_SCALE * (dist / REF_R) * (REF_PX / base_size)
+  end
+
+  for _, kind in ipairs({"planet","space-location"}) do
+    for _, proto in pairs(data.raw[kind] or {}) do
+      -- Только для тел с orbit.parent
+      if not (proto.orbit and proto.orbit.parent) then goto continue end
+      ensure_orbit_fields(proto)
+
+      local par  = proto.orbit.parent
+      local dist = proto.orbit.distance
+
+      if is_central_star(par) then
+        -- Вокруг центрального солнца оставляем ваниль
+        proto.draw_orbit   = true
+        proto.orbit.sprite = nil
+      else
+        -- Луны и планеты не у центрального солнца — наш кастомный спрайт:
+        if type(dist) == "number" and dist > 0 then
+          local base = pick_base(dist)
+          if base and base.file and base.size then
+            local scale = compute_scale(dist, base.size)
+            if scale and scale > 0 then
+              proto.draw_orbit = true
+              -- ВАЖНО: inline SpriteDefinition — ТОЛЬКО filename/size/scale.
+              -- Никаких 'type', 'layers', mipmaps и т.п. — это критично для атласа.
+              proto.orbit.sprite = {
+                filename = base.file,
+                size     = base.size,
+                scale    = scale
+              }
+            else
+              -- Защита от нулевого/NaN масштаба
+              proto.orbit.sprite = nil
+              proto.draw_orbit   = false
+            end
+          else
+            -- База не найдена/путь пустой → ничего не рисуем (иначе риск пустых картинок)
+            proto.orbit.sprite = nil
+            proto.draw_orbit   = false
+          end
+        else
+          proto.orbit.sprite = nil
+          proto.draw_orbit   = false
+        end
+      end
+
+      ::continue::
+    end
+  end
+end
