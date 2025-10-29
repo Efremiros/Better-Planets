@@ -1,7 +1,6 @@
--- data-final-fixes.lua
 -- 1) Создаём спрайты [img=tr-picon-<name>] для ВСЕХ планет/локаций + алиасы для звёзд.
--- 2) НИЧЕГО не трогаем в геометрии (position/orbit) — это важно для PlanetsLib.
--- 3) В самом конце — лёгкий санитайзер ориентаций (1.0 -> 0.0), чтобы не ловить крэш на границе.
+-- 2) Не трогаем геометрию (position/orbit) — важно для PlanetsLib.
+-- 3) В самом конце — лёгкий санитайзер ориентаций (1.0 -> 0.0), чтобы не ловить ошибку на границе.
 
 local function pick_from_table(t, depth)
   depth = (depth or 0) + 1
@@ -79,14 +78,14 @@ local function ensure_sprite_from_proto(target_sprite_name, source_proto_name)
   return true
 end
 
--- 1) Базовые спрайты: для КАЖДОГО прототипа создаём [img=tr-picon-<его_имя>]
+-- 1) Базовые спрайты: для КАЖДОГО прототипа [img=tr-picon-<его_имя>]
 for _, kind in ipairs({"planet","space-location"}) do
   for name,_ in pairs(data.raw[kind] or {}) do
     ensure_sprite_from_proto("tr-picon-"..name, name)
   end
 end
 
--- 2) Алиасы для звёзд, как просили:
+-- 2) Алиасы для звёзд:
 --    star-dea-dia -> иконка от dea-dia-system-edge
 --    nexuz-background -> иконка от sye-nexuz-sw
 --    redstar -> иконка от calidus-senestella-gate-senestella
@@ -99,7 +98,7 @@ for star, src in pairs(STAR_ALIAS) do
   ensure_sprite_from_proto("tr-picon-"..star, src)
 end
 
--- === sanity: только привести ориентации к полуинтервалу [0,1), ничего больше не трогаем ===
+-- === sanity [0,1) ===
 local function norm01(x)
   if type(x) ~= "number" then return x end
   x = x - math.floor(x)
@@ -116,5 +115,67 @@ for _, kind in ipairs({"planet","space-location"}) do
     if proto.orbit and proto.orbit.orientation ~= nil then
       proto.orbit.orientation = norm01(proto.orbit.orientation)
     end
+  end
+end
+
+-- === Deleting connection: prefer gate -> dea-dia-system-edge; only remove Fulgora link ===
+do
+  local function proto_exists(name)
+    return (data.raw.planet and data.raw.planet[name])
+        or (data.raw["space-location"] and data.raw["space-location"][name])
+  end
+
+  local function resolve_endpoint(name)
+    return proto_exists(name) and name or nil
+  end
+
+  local function remove_connection_between(a, b)
+    local t = data.raw["space-connection"]
+    if not t then return end
+    for cname, conn in pairs(table.deepcopy(t)) do
+      if conn and type(conn.from)=="string" and type(conn.to)=="string" then
+        local is_pair = (conn.from == a and conn.to == b) or (conn.from == b and conn.to == a)
+        if is_pair then
+          t[cname] = nil
+        end
+      end
+    end
+  end
+
+  local function ensure_connection(from_name, to_name)
+    if not (from_name and to_name) then return end
+    local cname = "bp-conn-"..from_name.."__"..to_name
+    if not data.raw["space-connection"] or not data.raw["space-connection"][cname] then
+      data:extend({
+        {
+          type = "space-connection",
+          name = cname,
+          icon = "__core__/graphics/empty.png",
+          icon_size = 1,
+          from = from_name,
+          to   = to_name,
+          length = 500,
+          order  = "zzz["..cname.."]",
+        }
+      })
+    end
+  end
+
+  local DEST      = resolve_endpoint("dea-dia-system-edge")
+  local GATE      = resolve_endpoint("calidus-senestella-gate-calidus")
+  local FULGORA   = resolve_endpoint("fulgora")
+
+  if DEST then
+    if GATE then
+      if FULGORA then
+        remove_connection_between(FULGORA, DEST)
+      end
+      ensure_connection(GATE, DEST)
+      log("[Better-Planets] edge-routing: using gate '"..GATE.."' -> '"..DEST.."' (removed only Fulgora link)")
+    else
+      log("[Better-Planets] edge-routing: gate not found; keep default Fulgora link to '"..DEST.."'")
+    end
+  else
+    log("[Better-Planets] edge-routing: DEST 'dea-dia-system-edge' not found; skip")
   end
 end
