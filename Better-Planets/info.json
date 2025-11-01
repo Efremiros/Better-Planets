@@ -7,9 +7,10 @@
   "description": "Переопределяет угол (tier) и радиус (distance) планет и космических точек. Значения настраиваются в меню модов.",
   "dependencies": [
     "base >= 2.0",
+    "space-age",
     "PlanetsLib",
     "PlanetsLibTiers",
-    "? Tiered-Solar-System",
+    "Redrawn-Space-Connections",
     "? Starmap_Nexuz",
     "? dea-dia-system",
     "? metal-and-stars",
@@ -45,6 +46,7 @@
     "? planet-nekohaven",
     "? planet-tchekor",
     "? planet-froodara",
-    "? planet-mickora"
+    "? planet-mickora",
+    "? terraria"
   ]
 }

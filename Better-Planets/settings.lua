@@ -1,3 +1,112 @@
+-- === Гейт по наличию модов ===
+-- База (Space Age): всегда есть
+local ALWAYS = {
+  nauvis=true, vulcanus=true, gleba=true, fulgora=true, cerys=true, aquilo=true
+}
+
+-- Карта «имя локации -> мод(ы), которые её добавляют»
+-- Строка = один мод; таблица = любой из перечисленных модов; nil = автоэвристика (см. ниже)
+local PROVIDERS = {
+  -- спутники/планеты из отдельных модов
+  muluna = "planet-muluna",
+  froodara = "planet-froodara",
+  zzhora = "planet-zzhora",
+  tchekor = "planet-tchekor",
+  quadromire = "planet-quadromire",
+  gerkizia = "planet-gerkizia",
+  nekohaven = "planet-nekohaven",
+  hexalith = "planet-hexalith",
+  ithurice = "planet-ithurice",
+  tapatrion = "planet-tapatrion",
+  mickora = "planet-mickora",
+  corruption = "terraria",
+
+  cubium = "cubium",
+  corrundum = "corrundum",
+  castra = "castra",
+  rubia = "rubia",
+  moshine = "Moshine",
+  igrys = "Igrys",
+  paracelsin = "Paracelsin",
+  secretas = "secretas",
+  frozeta = "secretas",
+  pelagos = "pelagos",
+  panglia = "panglia_planet",
+  arrakis = "planet-arrakis",
+  maraxsis = "maraxsis",
+  ["maraxsis-trench"] = "maraxsis",
+  tenebris = "tenebris-prime",
+  tiber = "Factorio-Tiberium",
+  shchierbin = "shchierbin",
+
+  -- AsteroidBelts
+  ["asteroid-belt-inner-edge"] = "AsteroidBelts",
+  ["asteroid-belt-outer-edge"] = "AsteroidBelts",
+
+  -- Dea–Dia
+  ["star-dea-dia"] = "dea-dia-system",
+  ["dea-dia-system-edge"] = "dea-dia-system",
+  ["planet-dea-dia"] = "dea-dia-system",
+  prosephina = "dea-dia-system",
+  lemures = "dea-dia-system",
+
+  -- SLP Dyson Sphere Reworked
+  ["slp-solar-system-sun"] = "slp-dyson-sphere-reworked",
+  ["slp-solar-system-sun2"] = "slp-dyson-sphere-reworked",
+  ["solar-system-edge"] = "slp-dyson-sphere-reworked",
+
+  -- Nexuz
+  ["sye-nauvis-ne"] = "Starmap_Nexuz",
+  ["sye-nexuz-sw"] = "Starmap_Nexuz",
+  ["nexuz-background"] = "Starmap_Nexuz",
+
+  -- Metal and stars
+  shipyard = "metal-and-stars",
+  ["mirandus-a"] = "metal-and-stars",
+  nix = "metal-and-stars",
+  ringworld = "metal-and-stars",
+  ["calidus-senestella-gate-calidus"] = "metal-and-stars",
+  ["calidus-senestella-gate-senestella"] = "metal-and-stars",
+  redstar = "metal-and-stars",
+
+  -- Skewer shattered/vesta
+  vesta = "skewer_planet_vesta",
+  ["shattered-planet"] = "skewer_shattered_planet",
+  ["skewer_shattered_planet"] = "skewer_shattered_planet",
+  ["skewer_lost_beyond"] = "skewer_shattered_planet",
+
+  -- StarCraft-планеты
+  aiur = "erm_toss",
+  char = "erm_zerg",
+  earth = "erm_redarmy",
+
+  -- Прочие
+  lignumis = "lignumis",
+  terrapalus = "terrapalus",
+  omnia = "omnia",
+  arig = {"planetaris-arig","planetaris-unbounded"},
+  hyarion = {"planetaris-hyarion","planetaris-unbounded"},
+}
+
+-- Эвристика: если мод не указан явно, пробуем популярные шаблоны имён
+local function heuristic_has_provider(name)
+  return mods["planet-"..name]            -- planet-ithurice, planet-arrakis, ...
+      or mods[name]                       -- мод назван так же, как планета (rubia, castra, corrundum...)
+end
+
+local function provider_ok(name)
+  if ALWAYS[name] then return true end
+  local src = PROVIDERS[name]
+  if src == nil then
+    return heuristic_has_provider(name) or false
+  elseif type(src) == "string" then
+    return mods[src] ~= nil
+  else -- таблица возможных модов
+    for _, m in ipairs(src) do if mods[m] then return true end end
+    return false
+  end
+end
+
 local ORDER = {
   "nauvis","muluna","lignumis",
   "vulcanus","froodara","zzhora",
@@ -9,6 +118,7 @@ local ORDER = {
   "rubia",
   "castra",
   "omnia","pelagos","panglia",
+  "asteroid-belt-inner-edge", "asteroid-belt-outer-edge",
   "aquilo","cubium","paracelsin",
   "secretas","frozeta","tapatrion","ithurice",
   "vesta","hexalith","nekohaven","mickora","corruption",
@@ -26,7 +136,7 @@ local DEFAULT_R = {
   ["calidus-senestella-gate-calidus"]=70, ["calidus-senestella-gate-senestella"]=0,
   castra=22.5, cerys=1.5, char=14, corrundum=35,
   corruption=9, cubium=0,
-      ["dea-dia-system-edge"]=20, earth=29, froodara=2, frozeta=5,
+  ["dea-dia-system-edge"]=20, earth=29, froodara=2, frozeta=5,
   fulgora=28, gerkizia=3.5, gleba=20, hexalith=7, hyarion=31,
   igrys=18, ithurice=6, lemures=7, lignumis=2,
   ["maraxsis-trench"]=0, maraxsis=25, mickora=8, ["mirandus-a"]=0,
@@ -39,7 +149,8 @@ local DEFAULT_R = {
   ["solar-system-edge"]=70, ["sye-nexuz-sw"]=0, tapatrion=4,
   tchekor=3, tenebris=50, terrapalus=1.5, tiber=0,
   vesta=47.5, vulcanus=8, zzhora=3,
-  ["sye-nauvis-ne"]=70, ["nexuz-background"]=0.0, ["star-dea-dia"]=200, redstar=300
+  ["sye-nauvis-ne"]=70, ["nexuz-background"]=0.0, ["star-dea-dia"]=200, redstar=300,
+  ["asteroid-belt-inner-edge"]=0, ["asteroid-belt-outer-edge"]=0
 }
 
 local DEFAULT_ANGLE = {
@@ -60,7 +171,8 @@ local DEFAULT_ANGLE = {
   ["solar-system-edge"]=270, ["sye-nexuz-sw"]=0, tapatrion=265,
   tchekor=50, tenebris=336, terrapalus=150, tiber=0,
   vesta=168, vulcanus=90, zzhora=5,
-  ["sye-nauvis-ne"]=310, ["nexuz-background"]=0.0, ["star-dea-dia"]=65, redstar=230
+  ["sye-nauvis-ne"]=310, ["nexuz-background"]=0.0, ["star-dea-dia"]=65, redstar=230,
+  ["asteroid-belt-inner-edge"]=0, ["asteroid-belt-outer-edge"]=0
 }
 
 local STAR_OVERRIDES = {
@@ -194,4 +306,13 @@ local function add_entry(name, idx)
   end
 end
 
-for i, name in ipairs(ORDER) do add_entry(name, i) end
+-- добавляем только существующие, и аккуратно пересортировываем order
+do
+  local idx = 0
+  for _, name in ipairs(ORDER) do
+    if provider_ok(name) then
+      idx = idx + 1
+      add_entry(name, idx)
+    end
+  end
+end
