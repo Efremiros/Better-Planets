@@ -4,7 +4,7 @@
   "title": "Better Planets",
   "author": "Efremiros",
   "factorio_version": "2.0",
-  "description": "Flexible, safe starmap edits with orbit controls, icons, and tech tweaks. Designed to be played with mods that are listed below.",
+  "description": "Flexible, safe starmap edits with orbit controls, icons, and tech tweaks. Designed to be played with mods that are listed below. However, can be played as a standalone mod.",
   "dependencies": [
     "base >= 2.0",
     "space-age",
