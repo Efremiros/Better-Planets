@@ -4,7 +4,7 @@
   "title": "Better Planets",
   "author": "Efremiros",
   "factorio_version": "2.0",
-  "description": "Переопределяет угол (tier) и радиус (distance) планет и космических точек. Значения настраиваются в меню модов.",
+  "description": "Flexible, safe starmap edits with orbit controls, icons, and tech tweaks. Designed to be played with mods that are listed below.",
   "dependencies": [
     "base >= 2.0",
     "space-age",
