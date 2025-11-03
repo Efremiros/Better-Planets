@@ -86,6 +86,7 @@ local PROVIDERS = {
   omnia = "omnia",
   arig = {"planetaris-arig","planetaris-unbounded"},
   hyarion = {"planetaris-hyarion","planetaris-unbounded"},
+  Gaia = {"exotic-space-industries","exotic-space-industries-remembrance"},
 }
 
 -- Эвристика: если мод не указан явно, пробуем популярные шаблоны имён
@@ -109,6 +110,7 @@ end
 
 local ORDER = {
   "nauvis","muluna","lignumis",
+  "Gaia",
   "vulcanus","froodara","zzhora",
   "fulgora","cerys","tchekor",
   "gleba","terrapalus","quadromire","gerkizia",
@@ -137,7 +139,7 @@ local DEFAULT_R = {
   castra=22.5, cerys=1.5, char=14, corrundum=35,
   corruption=9, cubium=0,
   ["dea-dia-system-edge"]=20, earth=29, froodara=2, frozeta=5,
-  fulgora=28, gerkizia=3.5, gleba=20, hexalith=7, hyarion=31,
+  fulgora=28, Gaia=22.5, gerkizia=3.5, gleba=20, hexalith=7, hyarion=31,
   igrys=18, ithurice=6, lemures=7, lignumis=2,
   ["maraxsis-trench"]=0, maraxsis=25, mickora=8, ["mirandus-a"]=0,
   moshine=9, muluna=1.5, nauvis=15, nekohaven=6, nix=0,
@@ -159,7 +161,7 @@ local DEFAULT_ANGLE = {
   castra=220, cerys=160, char=10, corrundum=200,
   corruption=220, cubium=0,
   ["dea-dia-system-edge"]=220, earth=35, froodara=155, frozeta=220,
-  fulgora=110, gerkizia=30, gleba=75, hexalith=20, hyarion=180,
+  fulgora=110, Gaia=55, gerkizia=30, gleba=75, hexalith=20, hyarion=180,
   igrys=100, ithurice=20, lemures=70, lignumis=300,
   ["maraxsis-trench"]=0, maraxsis=95, mickora=140, ["mirandus-a"]=0,
   moshine=200, muluna=60, nauvis=40, nekohaven=275, nix=0,

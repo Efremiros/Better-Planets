@@ -1,6 +1,6 @@
 {
   "name": "Better-Planets",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "title": "Better Planets",
   "author": "Efremiros",
   "factorio_version": "2.0",
@@ -47,6 +47,8 @@
     "? planet-tchekor",
     "? planet-froodara",
     "? planet-mickora",
-    "? terraria"
+    "? terraria",
+    "? exotic-space-industries",
+    "? exotic-space-industries-remembrance"
   ]
 }
