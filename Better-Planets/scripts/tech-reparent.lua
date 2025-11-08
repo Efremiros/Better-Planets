@@ -190,9 +190,31 @@ T.move("planet-discovery-omnia", "asteroid-collector", { move_branch=true, splic
 T.move("planet-discovery-tiber", "starsystem-discovery-nexuz", { move_branch=true, splice_gap=false, copy_cost_from="starsystem-discovery-nexuz", new_count=5000 })
 T.move("planet-discovery-aquilo", "space-discovery-asteroid-belt", { move_branch=true, splice_gap=false }) -- moving aquilo out of tiber planet discovery tech
 T.move("planet-discovery-arrakis", "starsystem-discovery-nexuz", { move_branch=true, splice_gap=false, copy_cost_from="starsystem-discovery-nexuz", new_count=5000 })
+
 T.move("planet-discovery-char", "starsystem-discovery-nexuz", { move_branch=true, splice_gap=false, copy_cost_from="starsystem-discovery-nexuz", new_count=5000 })
+T.move("enemy_erm_zerg--larva_egg-processing", "planet-discovery-char", { move_branch=true, splice_gap=false })
+T.move("enemy_erm_zerg--controllable-unlock", "enemy_erm_zerg--larva_egg-processing", { move_branch=true, splice_gap=false, new_count=10000 })
+T.move("enemy_erm_zerg--controllable-damage", "enemy_erm_zerg--controllable-unlock", { move_branch=true, splice_gap=false })
+
 T.move("planet-discovery-aiur", "starsystem-discovery-nexuz", { move_branch=true, splice_gap=false, copy_cost_from="starsystem-discovery-nexuz", new_count=5000 })
+T.move("enemy_erm_toss--crystal-processing", "planet-discovery-aiur", { move_branch=true, splice_gap=false })
+T.move("enemy_erm_toss--controllable-unlock", "enemy_erm_toss--crystal-processing", { move_branch=true, splice_gap=false, new_count=10000 })
+T.move("enemy_erm_toss--controllable-damage", "enemy_erm_toss--controllable-unlock", { move_branch=true, splice_gap=false })
+
 T.move("planet-discovery-earth", "starsystem-discovery-nexuz", { move_branch=true, splice_gap=false, copy_cost_from="starsystem-discovery-nexuz", new_count=5000 })
+T.move("enemy_erm_redarmy--organ-processing", "planet-discovery-earth", { move_branch=true, splice_gap=false })
+
 T.move("planet-discovery-corrundum", "starsystem-discovery-nexuz", { move_branch=true, splice_gap=false, copy_cost_from="starsystem-discovery-nexuz", new_count=5000 })
 T.move("planet-discovery-tenebris", "starsystem-discovery-nexuz", { move_branch=true, splice_gap=false, new_count=5000 })
 T.move("planet-discovery-maraxsis", "starsystem-discovery-nexuz", { move_branch=true, splice_gap=false, new_count=5000 })
+
+-- Custom Tech Fixes
+T.move("heating-tower", "planet-discovery-gleba", { move_branch=true, splice_gap=false })
+T.move("agriculture", "planet-discovery-gleba", { move_branch=true, splice_gap=false })
+
+T.move("tungsten-carbide", "planet-discovery-vulcanus", { move_branch=true, splice_gap=false })
+T.move("calcite-processing", "planet-discovery-vulcanus", { move_branch=true, splice_gap=false })
+
+T.move("holmium-processing", "planet-discovery-fulgora", { move_branch=true, splice_gap=false })
+
+T.move("lithium-processing", "planet-discovery-aquilo", { move_branch=true, splice_gap=false })
