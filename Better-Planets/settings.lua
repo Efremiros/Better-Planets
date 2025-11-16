@@ -143,7 +143,7 @@ local DEFAULT_R = {
   fulgora=28, Gaia=22.5, gerkizia=3.5, gleba=20, hexalith=7, hyarion=31,
   igrys=18, ithurice=6, lemures=7, lignumis=2,
   ["maraxsis-trench"]=0, maraxsis=25, mickora=8, ["mirandus-a"]=0,
-  moshine=9, muluna=1.5, nauvis=15, nekohaven=6, nix=0,
+  moshine=7.5, muluna=1.5, nauvis=15, nekohaven=6, nix=0,
   omnia=16.5, panglia=25.3, paracelsin=50, pelagos=13.5,
   ["planet-dea-dia"]=20, prosephina=10, quadromire=2.5, ringworld=9,
   rubia=29.5, secretas=53, ["shattered-planet"]=500, shchierbin=18,
