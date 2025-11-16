@@ -171,7 +171,7 @@ T.move("planet-discovery-ithurice",  "planet-discovery-secretas", { move_branch=
 T.move("planet-discovery-tapatrion", "planet-discovery-secretas", { move_branch=true, splice_gap=false, copy_cost_from="planet-discovery-secretas", new_count=5000 })
 
 T.move("planet-discovery-froodara", "planet-discovery-vulcanus", { move_branch=true, splice_gap=false, new_count=2000 })
-T.move("planet-discovery-zhora", "planet-discovery-vulcanus", { move_branch=true, splice_gap=false, new_count=2000 })
+T.move("planet-discovery-zzhora", "planet-discovery-vulcanus", { move_branch=true, splice_gap=false, new_count=2000 })
 
 T.move("planet-discovery-vesta", "fusion-reactor", { move_branch=true, splice_gap=false, copy_cost_from="fusion-reactor", new_count=5000 })
 T.move("planet-discovery-nekohaven", "planet-discovery-vesta", { move_branch=true, splice_gap=false, copy_cost_from="planet-discovery-vesta", new_count=5000 })

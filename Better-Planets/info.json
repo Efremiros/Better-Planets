@@ -1,6 +1,6 @@
 {
   "name": "Better-Planets",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "title": "Better Planets",
   "author": "Efremiros",
   "factorio_version": "2.0",
@@ -10,6 +10,7 @@
     "space-age",
     "PlanetsLib",
     "Redrawn-Space-Connections",
+    "Cosmic-Social-Distancing",
     "? PlanetsLibTiers",
     "? Starmap_Nexuz",
     "? dea-dia-system",

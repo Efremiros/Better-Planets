@@ -20,6 +20,7 @@ local PROVIDERS = {
   tapatrion = "planet-tapatrion",
   mickora = "planet-mickora",
   corruption = "terraria",
+  cerys = "Cerys-Moon-of-Fulgora",
 
   cubium = "cubium",
   corrundum = "corrundum",
