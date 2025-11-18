@@ -1,23 +1,29 @@
 ---------------------------------------------------------------------------------------------------
-Version: 1.0.4
+Version: 1.0.6
+Date: 2025-11-18
+  Bug fixes:
+    - Minor fixes and DEFAULTS improvements.
+    - Added Redrawn Space Compatibility as mandatory dependency mod.
+---------------------------------------------------------------------------------------------------
+Version: 1.0.5
 Date: 2025-11-16
-  Minor changes:
+  Bug fixes:
     - Added Cosmic-Social-Distancing as optional dependency.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.4
 Date: 2025-11-16
   Bug fixes:
-    - Fixed zzhora tech.
-    - Added Cosmic-Social-Distancing mod as mandatory dependency.
+    - Fixed orbits of Vulcanus moons Zzhora and Froodara.
+    - Fixed Zzhora tech.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.3
 Date: 2025-11-08
-  Minor fixes:
+  New Features:
     - Moved erm toss & zerg + rjdunlap planets techs under their planet research techs.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.2
 Date: 2025-11-03
-  New features:
+  New Features:
     - Added planet Gaia to config from mod Exotic Space Industries. Adjusted location and angle.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.1

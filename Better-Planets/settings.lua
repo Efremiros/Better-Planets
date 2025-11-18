@@ -1,7 +1,7 @@
 -- === Гейт по наличию модов ===
 -- База (Space Age): всегда есть
 local ALWAYS = {
-  nauvis=true, vulcanus=true, gleba=true, fulgora=true, cerys=true, aquilo=true
+  nauvis=true, vulcanus=true, gleba=true, fulgora=true, aquilo=true, ["solar-system-edge"]=true, ["shattered-planet"]=true
 }
 
 -- Карта «имя локации -> мод(ы), которые её добавляют»
@@ -54,7 +54,6 @@ local PROVIDERS = {
   -- SLP Dyson Sphere Reworked
   ["slp-solar-system-sun"] = "slp-dyson-sphere-reworked",
   ["slp-solar-system-sun2"] = "slp-dyson-sphere-reworked",
-  ["solar-system-edge"] = "slp-dyson-sphere-reworked",
 
   -- Nexuz
   ["sye-nauvis-ne"] = "Starmap_Nexuz",
@@ -72,7 +71,6 @@ local PROVIDERS = {
 
   -- Skewer shattered/vesta
   vesta = "skewer_planet_vesta",
-  ["shattered-planet"] = "skewer_shattered_planet",
   ["skewer_shattered_planet"] = "skewer_shattered_planet",
   ["skewer_lost_beyond"] = "skewer_shattered_planet",
 
