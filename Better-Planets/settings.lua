@@ -145,7 +145,7 @@ local DEFAULT_R = {
   omnia=16.5, panglia=25.3, paracelsin=50, pelagos=13.5,
   ["planet-dea-dia"]=20, prosephina=10, quadromire=2.5, ringworld=9,
   rubia=29.5, secretas=53, ["shattered-planet"]=500, shchierbin=18,
-  shipyard=0, skewer_lost_beyond=560, skewer_shattered_planet=15,
+  shipyard=0, skewer_lost_beyond=560, skewer_shattered_planet=515,
   ["slp-solar-system-sun2"]=4, ["slp-solar-system-sun"]=6,
   ["solar-system-edge"]=70, ["sye-nexuz-sw"]=0, tapatrion=4,
   tchekor=3, tenebris=50, terrapalus=1.5, tiber=0,

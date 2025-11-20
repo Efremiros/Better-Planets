@@ -118,6 +118,6 @@ for _, kind in ipairs({"planet","space-location"}) do
 end
 
 require("__Better-Planets__/scripts/tech-reparent")
-require("__Better-Planets__/scripts/dea-dia-calidus-gate")
+require("__Better-Planets__/scripts/space-connections")
 require("__Better-Planets__/scripts/space-connection-normalizer")
 require("__Better-Planets__/scripts/asteroid-streams")

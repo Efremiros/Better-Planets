@@ -44,13 +44,25 @@ do
   local DEST      = resolve_endpoint("dea-dia-system-edge")
   local GATE      = resolve_endpoint("calidus-senestella-gate-calidus")
   local FULGORA   = resolve_endpoint("fulgora")
+  local GLEBA   = resolve_endpoint("gleba")
 
+  local COPRULU   = resolve_endpoint("sye-nexuz-sw")
+  local SOLAR   = resolve_endpoint("solar-system-edge")
+
+
+  if COPRULU then
+    remove_connection_between(COPRULU, SOLAR)
+  end
   if DEST then
     if GATE then
       if FULGORA then
         remove_connection_between(FULGORA, DEST)
       end
+      if GLEBA then
+        remove_connection_between(GLEBA, GATE)
+      end
       ensure_connection(GATE, DEST)
+      ensure_connection(GLEBA, FULGORA)
       log("[Better-Planets] edge-routing: using gate '"..GATE.."' -> '"..DEST.."' (removed only Fulgora link)")
     else
       log("[Better-Planets] edge-routing: gate not found; keep default Fulgora link to '"..DEST.."'")
