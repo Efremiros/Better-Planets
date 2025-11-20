@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.7
+Date: 2025-11-20
+  Bug fixes:
+    - Removed skewer_lost_beyond and skewer_shattered_planet orbits.
+    - Changed DEFAULT parameters according to RSC and RSC COMPAT updates to fix planets and location positions
+---------------------------------------------------------------------------------------------------
 Version: 1.0.6
 Date: 2025-11-18
   Bug fixes:

@@ -40,6 +40,8 @@ do
     ["mirandus-a"]       = true,
     ["cube1"]       = true,
     ["cube2"]       = true,
+    ["skewer_lost_beyond"] = true,
+    ["skewer_shattered_planet"] = true,
   }
   local function parent_is_shattered(proto)
     local p = proto.orbit and proto.orbit.parent
