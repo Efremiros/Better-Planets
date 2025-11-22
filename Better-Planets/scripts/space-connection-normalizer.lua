@@ -1,59 +1,41 @@
--- Округляет длины космических путей до ближайших 5000 км
--- Условия:
---  • Не трогаем пути, где участвует ЛЮБОЙ из перечисленных спутников.
---  • Не трогаем длины < 5000 (считаем за предопределённые/особые).
---  • Меняем только те пути, где хотя бы один конец — из ORDER.
+-- Rounds space connection lengths to nearest 5000 km
+-- Conditions:
+--  • Don't touch paths involving ANY of the listed satellites
+--  • Don't touch lengths < 5000 (consider them predefined/special)
+--  • Only modify paths where at least one end is from ORDER
 
--- === Конфиг: список спутников (исключения) ===
-local MOON_SKIP = {
-  tchekor=true,
-  froodara=true, zzhora=true,
-  gerkizia=true, quadromire=true,
-  tapatrion=true, ithurice=true,
-  nekohaven=true, hexalith=true, mickora=true, corruption=true,
-}
+-- Load shared configuration
+local DEFAULTS = require("__Better-Planets__/config")
 
--- === Конфиг: периметр работ (ORDER) ===
-local ORDER = {
-  "nauvis",
-  "vulcanus",
-  "fulgora",
-  "gleba",
-  "igrys","shchierbin",
-  "moshine",
-  "arig","hyarion",
-  "rubia",
-  "castra",
-  "omnia","pelagos","panglia",
-  "asteroid-belt-inner-edge","asteroid-belt-outer-edge",
-  "aquilo","cubium","paracelsin",
-  "secretas",
-  "vesta",
-  "slp-solar-system-sun","slp-solar-system-sun2","solar-system-edge",
-
-  "sye-nauvis-ne","sye-nexuz-sw",
-  "arrakis","aiur","char","earth","corrundum","maraxsis","tiber","tenebris",
-
-  "calidus-senestella-gate-calidus","calidus-senestella-gate-senestella",
-  "shipyard","mirandus-a","nix","ringworld"
-}
+-- Generate ORDER and MOON_SKIP from DEFAULTS
+local ORDER = {}
 local ORDER_SET = {}
-for _, n in ipairs(ORDER) do ORDER_SET[n] = true end
+local MOON_SKIP = {}
 
--- Быстрая проверка: является ли локация спутником по признаку subgroup
+for _, entry in ipairs(DEFAULTS) do
+  table.insert(ORDER, entry.name)
+  ORDER_SET[entry.name] = true
+
+  -- Add moons to MOON_SKIP
+  if entry.is_moon then
+    MOON_SKIP[entry.name] = true
+  end
+end
+
+-- Quick check: is location a satellite by subgroup attribute
 local function is_satellite(name)
   local p = (data.raw.planet and data.raw.planet[name]) or (data.raw["space-location"] and data.raw["space-location"][name])
   return p and p.subgroup == "satellites"
 end
 
--- Проверка: пропускаем связь, если в ней участвует спутник (или он в MOON_SKIP)
+-- Check: skip connection if it involves a satellite (or it's in MOON_SKIP)
 local function connection_involves_moon(a, b)
   if MOON_SKIP[a] or MOON_SKIP[b] then return true end
   if is_satellite(a) or is_satellite(b) then return true end
   return false
 end
 
--- Критерий применения округления
+-- Criterion for applying rounding
 local function should_round(conn)
   if type(conn) ~= "table" then return false end
   local a, b = conn.from, conn.to
@@ -65,14 +47,14 @@ local function should_round(conn)
   return true
 end
 
--- Округление к ближайшим 5000 км
+-- Round to nearest 5000 km
 local function round_to_5000(n)
-  -- пример: 21000 -> 20000; 17000 -> 15000; 18000 -> 20000; 33000 -> 35000
+  -- example: 21000 -> 20000; 17000 -> 15000; 18000 -> 20000; 33000 -> 35000
   local step = 5000
   return math.floor((n + step/2) / step) * step
 end
 
--- Применить ко всем space-connection
+-- Apply to all space-connections
 do
   local sc = data.raw["space-connection"]
   if sc then
@@ -84,7 +66,7 @@ do
         if newv ~= old then
           conn.length = newv
           changed = changed + 1
-          -- Немного логов для отладки, можно закомментировать:
+          -- Some logging for debugging, can be commented out:
           log(("[Better-Planets] round-conn: %s (%s ↔ %s): %d → %d km")
               :format(name, tostring(conn.from), tostring(conn.to), old, newv))
         end

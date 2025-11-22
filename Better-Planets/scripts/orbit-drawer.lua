@@ -1,6 +1,6 @@
 -- === Better-Planets: Orbit sprites (moons r1..7 then r20..100; Nexuz r30..100; exclude r8,r9,r10) ===
 do
-  -- МАЛЫЕ спрайты (реальные размеры PNG), корректная геометрия через компенсацию пикселей.
+  -- SMALL sprites (actual PNG sizes), correct geometry through pixel compensation.
   local RINGS_SMALL = {
     { r=1, file="__Better-Planets__/graphics/orbits/orbit-unit-ring1.png",  size=262  },
     { r=2, file="__Better-Planets__/graphics/orbits/orbit-unit-ring2.png",  size=518  },
@@ -11,7 +11,7 @@ do
     { r=7, file="__Better-Planets__/graphics/orbits/orbit-unit-ring7.png",  size=1798 },
   }
 
-  -- Спрайты (4096 px) С РЕКОМЕНДОВАННЫМ scale для их базового радиуса (s_base).
+  -- Sprites (4096 px) WITH RECOMMENDED scale for their base radius (s_base).
   local RINGS_BIG_20_100 = {
     { r=20,  file="__Better-Planets__/graphics/orbits/orbit-unit-ring20.png",  size=4096, s=0.31268310546875  },
     { r=30,  file="__Better-Planets__/graphics/orbits/orbit-unit-ring30.png",  size=4096, s=0.46893310546875  },
@@ -24,47 +24,44 @@ do
     { r=100, file="__Better-Planets__/graphics/orbits/orbit-unit-ring100.png", size=4096, s=1.5626831054687502 },
   }
 
-  -- Для Nexuz используем только r>=30 (толще, но точные по радиусу).
+  -- For Nexuz we use only r>=30 (thicker, but accurate by radius).
   local RINGS_BIG_30_100 = {
     RINGS_BIG_20_100[2], RINGS_BIG_20_100[3], RINGS_BIG_20_100[4],
     RINGS_BIG_20_100[5], RINGS_BIG_20_100[6], RINGS_BIG_20_100[7],
     RINGS_BIG_20_100[8], RINGS_BIG_20_100[9],
   }
 
-  -- Эталон PlanetsLib генератора для r=100, 4096 px:
+  -- Reference PlanetsLib generator for r=100, 4096 px:
   local REF_R, REF_PX, REF_SCALE = 100, 4096, 1.5626831054687502
 
-  -- Полные запреты
+  -- Complete prohibitions
   local NO_ORBIT_SELF = {
     ["shattered-planet"] = true,
+    ["skewer_shattered_planet"] = true,
+    ["skewer_lost_beyond"] = true,
     ["mirandus-a"]       = true,
     ["cube1"]       = true,
     ["cube2"]       = true,
-    ["skewer_lost_beyond"] = true,
-    ["skewer_shattered_planet"] = true,
   }
-  local function parent_is_shattered(proto)
-    local p = proto.orbit and proto.orbit.parent
-    return p and p.type == "space-location" and p.name == "shattered-planet"
-  end
 
-  -- Белые списки
+  -- basic orbits should be drawn, if changed, drawn by mod (condition)
   local ORBIT_WHITELIST_COND = {
     muluna = true, lignumis = true, terrapalus = true, cerys = true,
-    frozeta = true, prosephina = true, lemures = true,
+    frozeta = true, prosephina = true, lemures = true, rabbasca = true,
   }
+  -- always draw orbits for these locations, as they are changed by the mod
   local ORBIT_WHITELIST_FORCE = {
-    -- луны/планеты, которым всегда рисуем:
+    -- moons/planets for which we always draw:
     tchekor = true, quadromire = true, gerkizia = true, froodara = true, zzhora = true,
     hexalith = true, nekohaven = true, mickora = true, corruption = true, tapatrion = true,
     ithurice = true,
-    -- системы:
+    -- systems:
     arrakis = true, aiur = true, char = true, earth = true, corrundum = true,
     maraxsis = true, tiber = true, tenebris = true, ["planet-dea-dia"] = true,
     shipyard = true, nix = true,
   }
 
-  -- Набор лун
+  -- Set of moons
   local MOONS = {
     muluna=true, lignumis=true, terrapalus=true, cerys=true,
     frozeta=true, prosephina=true, lemures=true,
@@ -73,7 +70,7 @@ do
     ithurice=true,
   }
 
-  -- Специальные родительские системы
+  -- Special parent systems
   local PARENT_STYLE = {
     ["nexuz-background"] = "nexuz",
     ["redstar"]          = "system",
@@ -84,21 +81,21 @@ do
     return par and par.type == "space-location" and par.name == "star"
   end
 
-  -- Масштаб для МАЛЫХ PNG через компенсацию пикселей (правильный радиус для любого dist):
+  -- Scale for SMALL PNG through pixel compensation (correct radius for any dist):
   -- scale = REF_SCALE * (dist / 100) * (4096 / base.size)
   local function scale_small(dist, base_px)
     if not (dist and dist > 0 and base_px and base_px > 0) then return nil end
     return REF_SCALE * (dist / REF_R) * (REF_PX / base_px)
   end
 
-  -- Масштаб для БОЛЬШИХ PNG по их рекомендованному s_base для base.r:
+  -- Scale for BIG PNG by their recommended s_base for base.r:
   -- scale = s_base * (dist / base.r)
   local function scale_big_by_base(dist, base)
     if not (dist and dist > 0 and base and base.s and base.r and base.r > 0) then return nil end
     return base.s * (dist / base.r)
   end
 
-  -- Выбор «пола» для малых (r1..r7): максимальный r_base ≤ dist
+  -- Choosing 'floor' for small (r1..r7): maximum r_base ≤ dist
   local function pick_small_floor(dist)
     if type(dist) ~= "number" or dist <= 0 then return nil end
     local best = RINGS_SMALL[1]
@@ -108,7 +105,7 @@ do
     return best
   end
 
-  -- Выбор «потолка» для больших (r20..r100), с минимальным порогом min_r (20 или 30)
+  -- Choosing 'ceiling' for big (r20..r100), with minimum threshold min_r (20 or 30)
   local function pick_big_ceil_with_min(dist, list, min_r)
     if type(dist) ~= "number" or dist <= 0 then return nil end
     local candidate = nil
@@ -126,7 +123,7 @@ do
     if proto.orientation and proto.orbit.orientation == nil then proto.orbit.orientation = proto.orientation end
   end
 
-  -- безопасный доступ к настройкам (fallback, если BP_OVERRIDDEN не проставлен)
+  -- safe access to settings (fallback, if BP_OVERRIDDEN is not set)
   local function get_setting(key)
     local s = settings and settings.startup
     return (s and s[key]) and s[key].value or nil
@@ -154,8 +151,8 @@ do
 
   for _, kind in ipairs({"planet","space-location"}) do
     for name, proto in pairs(data.raw[kind] or {}) do
-      -- 0) запреты и «дети» shattered-planet
-      if NO_ORBIT_SELF[name] or parent_is_shattered(proto) then
+      -- 0) prohibitions and 'children' of shattered-planet
+      if NO_ORBIT_SELF[name] then
         proto.draw_orbit   = false
         if proto.orbit then proto.orbit.sprite = nil end
         goto continue
@@ -168,14 +165,14 @@ do
       local par  = proto.orbit.parent
       local dist = proto.orbit.distance
 
-      -- 2) у центрального солнца — ваниль
+      -- 2) for central sun — vanilla
       if is_central_star(par) then
         proto.draw_orbit   = true
         proto.orbit.sprite = nil
         goto continue
       end
 
-      -- 3) решаем по белым спискам
+      -- 3) decide by whitelists
       local must_draw = false
       if ORBIT_WHITELIST_FORCE[name] then
         must_draw = true
@@ -187,13 +184,13 @@ do
         goto continue
       end
 
-      -- 4) стиль выбора
+      -- 4) selection style
       local style = (par and PARENT_STYLE[par.name]) or "system"
       if MOONS[name] then style = "moon" end
 
       if style == "moon" then
         if dist <= 15 then
-          -- ближние луны: малые PNG (видимые, но аккуратные)
+          -- nearby moons: small PNG (visible, but neat)
           local base = pick_small_floor(dist)
           local sc = base and scale_small(dist, base.size) or nil
           if base and sc and sc > 0 then
@@ -208,7 +205,7 @@ do
             proto.orbit.sprite = nil
           end
         else
-          -- дальние луны: большие PNG, НО без r8..r10 → r20..r100 (тонко, но не «невидимо»)
+          -- distant moons: big PNG, BUT without r8..r10 → r20..r100 (thin, but not 'invisible')
           local base = pick_big_ceil_with_min(dist, RINGS_BIG_20_100, 20)
           local sc = base and scale_big_by_base(dist, base) or nil
           if base and sc and sc > 0 then
@@ -225,7 +222,7 @@ do
         end
 
       elseif style == "nexuz" then
-        -- Nexuz: большие PNG r30..r100 (толще, чем r100), точный радиус.
+        -- Nexuz: big PNG r30..r100 (thicker than r100), accurate radius.
         local base = pick_big_ceil_with_min(dist, RINGS_BIG_30_100, 30)
         local sc = base and scale_big_by_base(dist, base) or nil
         if base and sc and sc > 0 then
@@ -241,7 +238,7 @@ do
         end
 
       else
-        -- Остальные системы: r100
+        -- Other systems: r100
         local base = RINGS_BIG_20_100[#RINGS_BIG_20_100] -- r=100
         local sc = scale_big_by_base(dist, base)
         if sc and sc > 0 then

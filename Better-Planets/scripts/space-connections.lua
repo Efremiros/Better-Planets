@@ -1,33 +1,33 @@
 -- scripts/space-connections.lua
--- Better Planets — управление space-connection связями между планетами/локациями.
--- Выполняется на стадии data-final-fixes, когда уже загружены все моды.
+-- Better Planets — managing space-connection links between planets/locations.
+-- Executed at data-final-fixes stage, when all mods are already loaded.
 --
--- Возможности:
---  * Удаление связей между двумя точками (remove).
---  * Создание новых связей (ensure).
---  * Мягкий фоллбек: если какой-то локации нет — ничего не делаем.
+-- Capabilities:
+--  * Removing connections between two points (remove).
+--  * Creating new connections (ensure).
+--  * Soft fallback: if some location doesn't exist — we do nothing.
 --
--- Как подключить: добавьте в data-final-fixes.lua строку:
+-- How to connect: add to data-final-fixes.lua the line:
 --   require("__Better-Planets__/scripts/space-connections")
 --
--- Если хотите вызывать из другого файла, экспорт доступен через таблицу
+-- If you want to call from another file, export is available through table
 --   BetterPlanetsConnections.remove(from, to)
 --   BetterPlanetsConnections.ensure(from, to, length)
 
 local C = {}
 
--- Проверка существования прототипа планеты/локации
+-- Check for existence of planet/location prototype
 local function proto_exists(name)
   return (data.raw.planet and data.raw.planet[name])
       or (data.raw["space-location"] and data.raw["space-location"][name])
 end
 
--- Резолвинг точки (возвращает имя, если существует)
+-- Resolving point (returns name, if exists)
 local function resolve_endpoint(name)
   return proto_exists(name) and name or nil
 end
 
--- Удаление связи между двумя точками (в любом направлении)
+-- Removing connection between two points (in any direction)
 function C.remove(a, b)
   if not (a and b) then return false end
   local resolved_a = resolve_endpoint(a)
@@ -55,10 +55,10 @@ function C.remove(a, b)
   return removed
 end
 
--- Создание новой связи между двумя точками
+-- Creating new connection between two points
 -- opts:
---   length (number, default 500) — длина связи
---   order  (string, optional)    — порядок сортировки
+--   length (number, default 500) — connection length
+--   order  (string, optional)    — sort order
 function C.ensure(from_name, to_name, opts)
   opts = opts or {}
   local length = opts.length or 500
@@ -94,22 +94,26 @@ function C.ensure(from_name, to_name, opts)
   return false
 end
 
--- Экспорт для потенциального переиспользования в других скриптах мода
+-- Export for potential reuse in other mod scripts
 BetterPlanetsConnections = rawget(_G, "BetterPlanetsConnections") or {}
 BetterPlanetsConnections.remove = C.remove
 BetterPlanetsConnections.ensure = C.ensure
 
 -- ===================================================================
--- ШАБЛОНЫ: можно вручную добавлять или удалять связи
+-- TEMPLATES: you can manually add or remove connections
 -- ===================================================================
 
--- Удаление связей
+-- Removing connections
 C.remove("sye-nexuz-sw", "solar-system-edge")
 C.remove("fulgora", "dea-dia-system-edge")
 C.remove("gleba", "calidus-senestella-gate-calidus")
 C.remove("calidus-senestella-gate-calidus", "calidus-senestella-gate-senestella")
+C.remove("solar-system-edge", "corrundum")
+C.remove("maraxsis-trench", "cube2")
+C.remove("vesta", "calidus-senestella-gate-calidus")
 
--- Создание новых связей
+-- Creating new connections
 C.ensure("calidus-senestella-gate-calidus", "dea-dia-system-edge", { length = 1000 })
 C.ensure("calidus-senestella-gate-calidus", "calidus-senestella-gate-senestella", { length = 1000 })
+C.ensure("fulgora", "calidus-senestella-gate-calidus", { length = 70000 })
 C.ensure("gleba", "fulgora", { length = 30000 })

@@ -1,15 +1,15 @@
 -- data.lua
--- ВНИМАНИЕ: НИКАКИХ PlanetsLib:update здесь не вызываем.
--- НИКАКИХ правок orbit/position здесь не делаем.
--- Репарентинг/перемещения выполняются ТОЛЬКО в data-updates.lua (поздняя стадия),
--- иначе ломается каскад других модов и орбиты начинают рисоваться от (0,0).
+-- WARNING: We do NOT call PlanetsLib:update here.
+-- We do NOT make any orbit/position edits here.
+-- Reparenting/movements are performed ONLY in data-updates.lua (late stage),
+-- otherwise the cascade of other mods breaks and orbits start drawing from (0,0).
 
 ------------------------------
--- ### Tiers (опционально) ###
+-- ### Tiers (optional) ###
 ------------------------------
--- Если установлен PlanetsLib: Tiers, можем (аккуратно) записать tier по углу,
--- чтобы другие моды, завязанные на tiers, видели актуальные значения.
--- Безопасно: tiers сам по себе не двигает объекты, это только «метка».
+-- If PlanetsLib: Tiers is installed, we can (carefully) write tier by angle,
+-- so that other mods tied to tiers see actual values.
+-- Safe: tiers itself doesn't move objects, it's just a 'tag'.
 
 do
   local TL = data.raw["mod-data"] and data.raw["mod-data"]["PlanetsLib-tierlist"]
@@ -36,7 +36,7 @@ do
       return st and st.value or nil
     end
 
-    -- Собираем все имена из наших настроек, чтобы писать tier только по включённым объектам
+    -- Collect all names from our settings to write tier only for enabled objects
     local names = {}
     for key, st in pairs(settings.startup) do
       if type(key)=="string" and key:sub(1,3)=="tr-" and st then

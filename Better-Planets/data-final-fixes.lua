@@ -1,6 +1,6 @@
--- 1) Создаём спрайты [img=tr-picon-<name>] для ВСЕХ планет/локаций + алиасы для звёзд.
--- 2) Не трогаем геометрию (position/orbit) — важно для PlanetsLib.
--- 3) В самом конце — лёгкий санитайзер ориентаций (1.0 -> 0.0), чтобы не ловить ошибку на границе.
+-- 1) Create sprites [img=tr-picon-<name>] for ALL planets/locations + aliases for stars.
+-- 2) Don't touch geometry (position/orbit) — important for PlanetsLib.
+-- 3) At the very end — a light sanitizer for orientations (1.0 -> 0.0), to avoid catching errors at the boundary.
 
 local function pick_from_table(t, depth)
   depth = (depth or 0) + 1
@@ -77,17 +77,17 @@ local function ensure_sprite_from_proto(target_sprite_name, source_proto_name)
   return true
 end
 
--- 1) Базовые спрайты: для КАЖДОГО прототипа [img=tr-picon-<его_имя>]
+-- 1) Base sprites: for EVERY prototype [img=tr-picon-<its_name>]
 for _, kind in ipairs({"planet","space-location"}) do
   for name,_ in pairs(data.raw[kind] or {}) do
     ensure_sprite_from_proto("tr-picon-"..name, name)
   end
 end
 
--- 2) Алиасы для звёзд:
---    star-dea-dia -> иконка от dea-dia-system-edge
---    nexuz-background -> иконка от sye-nexuz-sw
---    redstar -> иконка от calidus-senestella-gate-senestella
+-- 2) Aliases for stars:
+--    star-dea-dia -> icon from dea-dia-system-edge
+--    nexuz-background -> icon from sye-nexuz-sw
+--    redstar -> icon from calidus-senestella-gate-senestella
 local STAR_ALIAS = {
   ["star-dea-dia"]     = "dea-dia-system-edge",
   ["nexuz-background"] = "sye-nexuz-sw",
@@ -117,7 +117,18 @@ for _, kind in ipairs({"planet","space-location"}) do
   end
 end
 
-require("__Better-Planets__/scripts/tech-reparent")
-require("__Better-Planets__/scripts/space-connections")
-require("__Better-Planets__/scripts/space-connection-normalizer")
+-- Conditionally load scripts based on settings
+if settings.startup["tr-enable-tech-reparent"] and settings.startup["tr-enable-tech-reparent"].value then
+  require("__Better-Planets__/scripts/tech-reparent")
+end
+
+if settings.startup["tr-enable-space-connections"] and settings.startup["tr-enable-space-connections"].value then
+  require("__Better-Planets__/scripts/space-connections")
+end
+
+if settings.startup["tr-enable-connection-normalizer"] and settings.startup["tr-enable-connection-normalizer"].value then
+  require("__Better-Planets__/scripts/space-connection-normalizer")
+end
+
+-- Always load asteroid streams (no toggle for this yet)
 require("__Better-Planets__/scripts/asteroid-streams")

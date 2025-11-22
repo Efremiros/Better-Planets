@@ -1,21 +1,21 @@
 -- scripts/tech-reparent.lua
--- Better Planets — перенос технологий и веток между узлами дерева исследований.
--- Выполняется на стадии data-final-fixes, когда уже загружены все моды.
+-- Better Planets — moving technologies and branches between nodes of the research tree.
+-- Executed at data-final-fixes stage, when all mods are already loaded.
 --
--- Возможности:
---  * Перенос одиночной технологии под другой узел ("под ветку").
---  * Перенос целой ветки (все потомки остаются висеть на корневой технологии).
---  * Аккуратная «вырезка»: если переносим ТОЛЬКО один узел, то все технологии,
---    которые зависели от него, вместо него начинают зависеть от его прежних
---    родителей — так не рвутся пути.
---  * Мягкий фоллбек: если какой‑то технологии нет — ничего не делаем.
---  * Настройка стоимости: можно скопировать рецептуру пакетов из другой
---    технологии и/или задать новое число (count).
+-- Capabilities:
+--  * Moving a single technology under another node ('under a branch').
+--  * Moving an entire branch (all descendants remain attached to the root technology).
+--  * Careful 'cutting': if moving ONLY one node, then all technologies,
+--    that depended on it, instead of it start depending on its former
+--    parents — this way paths are not broken.
+--  * Soft fallback: if some technology doesn't exist — we do nothing.
+--  * Cost adjustment: you can copy the pack recipe from another
+--    technology and/or set a new number (count).
 --
--- Как подключить: добавьте в data-final-fixes.lua строку:
+-- How to connect: add to data-final-fixes.lua the line:
 --   require("__Better-Planets__/scripts/tech-reparent")
 --
--- Если хотите вызывать из другого файла, экспорт доступен через таблицу
+-- If you want to call from another file, export is available through table
 --   BetterPlanetsTech.move(tech_name, new_parent_name, opts)
 
 local util = require("util")
@@ -59,7 +59,7 @@ local function remove_prereq(proto, name)
   proto.prerequisites = dst
 end
 
--- Собираем потомков (ветку), идущих после корневой технологии root.
+-- Collect descendants (branch) going after root technology root.
 local function collect_branch(root_name)
   local vis = {[root_name] = true}
   local queue = {root_name}
@@ -72,10 +72,10 @@ local function collect_branch(root_name)
       end
     end
   end
-  return vis -- множество имён (true)
+  return vis -- set of names (true)
 end
 
--- Все непосредственные «дети» (те, кто прямо зависит от узла)
+-- All direct 'children' (those who directly depend on the node)
 local function direct_successors(name)
   local set = {}
   for n, proto in pairs(data.raw.technology or {}) do
@@ -84,30 +84,30 @@ local function direct_successors(name)
   return set
 end
 
--- Копия unit с возможной заменой счётчика
+-- Copy of unit with possible counter replacement
 local function copy_unit_from(source_name, new_count)
   local src = tech(source_name)
   if not (src and src.unit) then return nil end
   local unit = util.table.deepcopy(src.unit)
   if new_count then
     unit.count = tonumber(new_count)
-    unit.count_formula = nil -- принудительно переходим на фиксированное число
+    unit.count_formula = nil -- forcefully switch to fixed number
   end
   return unit
 end
 
--- Главная функция
+-- Main function
 -- opts:
---   move_branch (bool, default true) — переносить всю ветку (потомков не трогаем, они остаются на корне)
---   splice_gap  (bool, default true) — если переносим ТОЛЬКО одиночный узел (move_branch=false),
---                                       то заменить зависимости его «детей» на прежних «родителей» узла
---   copy_cost_from (string|nil)       — имя технологии-донора для рецептуры пакетов
---   new_count (int|nil)               — новое число исследования (unit.count)
--- Возвращает true/false: были ли изменения.
+--   move_branch (bool, default true) — move entire branch (don't touch descendants, they remain on root)
+--   splice_gap  (bool, default true) — if moving ONLY a single node (move_branch=false),
+--                                       then replace dependencies of its 'children' with former 'parents' of the node
+--   copy_cost_from (string|nil)       — name of donor technology for pack recipe
+--   new_count (int|nil)               — new research number (unit.count)
+-- Returns true/false: whether there were changes.
 function T.move(tech_name, new_parent_name, opts)
   opts = opts or {}
-  local move_branch = (opts.move_branch ~= false) -- по умолчанию true
-  local splice_gap  = (opts.splice_gap ~= false)  -- по умолчанию true
+  local move_branch = (opts.move_branch ~= false) -- default true
+  local splice_gap  = (opts.splice_gap ~= false)  -- default true
   local donor       = opts.copy_cost_from
   local new_count   = opts.new_count
 
@@ -118,11 +118,11 @@ function T.move(tech_name, new_parent_name, opts)
   node.prerequisites = dedup(node.prerequisites or {})
   local old_parents = util.table.deepcopy(node.prerequisites)
 
-  -- Защита от циклов: нельзя вешать на собственного потомка
+  -- Protection against cycles: can't hang on own descendant
   local branch = collect_branch(tech_name)
   if branch[new_parent_name] then return false end
 
-  -- 1) Если переносим одиночный узел, аккуратно «вырезаем» его из старого места
+  -- 1) If moving a single node, carefully 'cut' it from old place
   if not move_branch and splice_gap then
     local succ = direct_successors(tech_name)
     for s_name,_ in pairs(succ) do
@@ -135,10 +135,10 @@ function T.move(tech_name, new_parent_name, opts)
     end
   end
 
-  -- 2) Перевешиваем сам узел под нового родителя
+  -- 2) Rehang the node itself under new parent
   node.prerequisites = { new_parent_name }
 
-  -- 3) Настройка стоимости, если требуется
+  -- 3) Cost adjustment, if required
   if donor or new_count then
     local unit
     if donor and exists(donor) and tech(donor).unit then
@@ -156,7 +156,7 @@ function T.move(tech_name, new_parent_name, opts)
   return true
 end
 
--- Экспорт для потенциального переиспользования в других скриптах мода
+-- Export for potential reuse in other mod scripts
 BetterPlanetsTech = rawget(_G, "BetterPlanetsTech") or {}
 BetterPlanetsTech.move = T.move
 

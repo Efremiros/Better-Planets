@@ -1,18 +1,18 @@
 -- scripts/asteroid-streams.lua
--- Better Planets — точное копирование астероидных путей с синхронизацией влияний концов.
--- Делает:
---  1) Полную замену asteroid_spawn_definitions у целевого space-connection (с рескейлом и опциональным reverse).
---  2) Устраняет наложение: оставляет РОВНО одну связь для пары from<->to (остальные дубли удаляются).
---  3) Копирует «фон» от концов: asteroid_spawn_influence И asteroid_spawn_definitions
---     с исходных локаций на соответствующие целевые (учитывая reverse).
---  4) Фиксирует связь от «перерисовщиков» через redrawn_connections_keep.
+-- Better Planets — precise copying of asteroid paths with endpoint influence synchronization.
+-- Does:
+--  1) Complete replacement of asteroid_spawn_definitions for target space-connection (with rescale and optional reverse).
+--  2) Eliminates overlapping: leaves EXACTLY one connection for pair from<->to (other duplicates are removed).
+--  3) Copies 'background' from endpoints: asteroid_spawn_influence AND asteroid_spawn_definitions
+--     from source locations to corresponding targets (considering reverse).
+--  4) Fixes connection from 'redrawers' through redrawn_connections_keep.
 
 local M = {}
 
--- Устранять наложение (удалять дубликаты связей для пары from<->to)
+-- Eliminate overlapping (remove duplicate connections for pair from<->to)
 local EXACT_MODE = true
 
--- ==== Утилиты =============================================================
+-- ==== Utilities =============================================================
 
 local function deep_copy(obj)
   if type(obj) ~= "table" then return obj end
@@ -25,8 +25,8 @@ local function has_sc()
   return data and data.raw and data.raw["space-connection"] ~= nil
 end
 
--- Найти связь между from/to (в любом порядке)
--- Возврат: proto, is_forward, length_km, proto_name
+-- Find connection between from/to (in any order)
+-- Return: proto, is_forward, length_km, proto_name
 local function find_connection(from_name, to_name)
   if not has_sc() then return nil, false, nil, nil end
   for name, def in pairs(data.raw["space-connection"]) do
@@ -40,7 +40,7 @@ local function find_connection(from_name, to_name)
   return nil, false, nil, nil
 end
 
--- Удалить все связи A<->B кроме keep_name (для исключения суммирования вероятностей)
+-- Remove all connections A<->B except keep_name (to exclude probability summation)
 local function nuke_other_connections(a, b, keep_name)
   if not (EXACT_MODE and has_sc()) then return end
   local sc = data.raw["space-connection"]
@@ -58,7 +58,7 @@ local function stamp_keep(def)
   def.redrawn_connections_keep = true
 end
 
--- Переразметить точки по длине (с реверсом)
+-- Remap points by length (with reverse)
 local function remap_points(points, src_len, dst_len, reverse)
   local out = {}
   src_len = src_len or 600
@@ -79,7 +79,7 @@ local function remap_points(points, src_len, dst_len, reverse)
   return out
 end
 
--- DSL → API (используется только в set_route_asteroids)
+-- DSL → API (used only in set_route_asteroids)
 local function normalize_defs(in_defs, len_km, opts)
   opts = opts or {}
   if type(in_defs) == "table" and in_defs[1] and in_defs[1].spawn_points then
@@ -106,15 +106,15 @@ local function normalize_defs(in_defs, len_km, opts)
   return out
 end
 
--- ==== Работа с прототипами локаций (конечной точки) =======================
+-- ==== Working with location prototypes (endpoint) =======================
 
 local function proto_of_planet_or_loc(name)
   return (data.raw.planet and data.raw.planet[name])
       or (data.raw["space-location"] and data.raw["space-location"][name])
 end
 
--- Полностью скопировать asteroid_spawn_definitions И asteroid_spawn_influence
--- с одной локации (src_loc) на другую (dst_loc). Если у источника nil — ставим nil.
+-- Completely copy asteroid_spawn_definitions AND asteroid_spawn_influence
+-- from one location (src_loc) to another (dst_loc). If source has nil — set nil.
 local function copy_endpoint_all(src_loc, dst_loc)
   local src = proto_of_planet_or_loc(src_loc)
   local dst = proto_of_planet_or_loc(dst_loc)
@@ -123,7 +123,7 @@ local function copy_endpoint_all(src_loc, dst_loc)
     return false
   end
 
-  -- копируем точные определения и влияние (фон)
+  -- copy exact definitions and influence (background)
   if src.asteroid_spawn_definitions ~= nil then
     dst.asteroid_spawn_definitions = deep_copy(src.asteroid_spawn_definitions)
   else
@@ -139,9 +139,9 @@ local function copy_endpoint_all(src_loc, dst_loc)
   return true
 end
 
--- ==== Основные операции ====================================================
+-- ==== Main operations ====================================================
 
--- Полная замена набора астероидов на маршруте (кастомные точки)
+-- Complete replacement of asteroid set on route (custom points)
 function M.set_route_asteroids(from_name, to_name, defs, opts)
   opts = opts or {}
   local conn, _, L, conn_name = find_connection(from_name, to_name)
@@ -159,8 +159,8 @@ function M.set_route_asteroids(from_name, to_name, defs, opts)
   return true
 end
 
--- Копирование набора астероидов (с рескейлом/реверсом) И синхронизация влияний концов.
--- opts.reverse=true – развернуть кривую по длине и «поменять местами» копирование влияний концов.
+-- Copying asteroid set (with rescale/reverse) AND endpoint influence synchronization.
+-- opts.reverse=true – reverse curve by length and 'swap' endpoint influence copying.
 function M.copy_route_and_endpoints(src_from, src_to, dst_from, dst_to, opts)
   opts = opts or {}
   local src, _, src_len = find_connection(src_from, src_to)
@@ -180,7 +180,7 @@ function M.copy_route_and_endpoints(src_from, src_to, dst_from, dst_to, opts)
     return false
   end
 
-  -- 1) Копируем кривые астероидов
+  -- 1) Copy asteroid curves
   local out_defs = {}
   for _, def in ipairs(defs) do
     table.insert(out_defs, {
@@ -196,10 +196,10 @@ function M.copy_route_and_endpoints(src_from, src_to, dst_from, dst_to, opts)
   stamp_keep(dst)
   nuke_other_connections(dst_from, dst_to, dst_name)
 
-  -- 2) Синхронизируем влияние концов и локальные определения концов
-  --    Нормальный случай: копируем A→B → C→D:
+  -- 2) Synchronize endpoint influence and local endpoint definitions
+  --    Normal case: copy A→B → C→D:
   --      influence(A) → influence(C), influence(B) → influence(D)
-  --    При reverse=true: копируем A→B → (reverse) C→D:
+  --    With reverse=true: copy A→B → (reverse) C→D:
   --      influence(A) → influence(D), influence(B) → influence(C)
   if opts.reverse then
     copy_endpoint_all(src_from, dst_to)
@@ -212,7 +212,7 @@ function M.copy_route_and_endpoints(src_from, src_to, dst_from, dst_to, opts)
   return true
 end
 
--- Массовая копия (list: { {src={from,to}, dst={ {from,to,reverse?}, ... }}, ... })
+-- Mass copy (list: { {src={from,to}, dst={ {from,to,reverse?}, ... }}, ... })
 function M.copy_many(list)
   if type(list) ~= "table" then return end
   for _, item in ipairs(list) do
@@ -223,15 +223,15 @@ function M.copy_many(list)
   end
 end
 
--- ======= ПРЕСЕТЫ ПОЛЬЗОВАТЕЛЯ ============================================
+-- ======= USER PRESETS ============================================
 
 local USER_PRESETS = {}
 
--- 1) Из задания:
---   Secretas→Tapatrion и Secretas→Ithurice = как Secretas→Frozeta
---   Gleba→Gerkizia и Gleba→Quadromire      = как Gleba→Terrapalus
---   Fulgora→Tchekor                         = как Fulgora→Cerys
---   Vulcanus→Zzhora и Vulcanus→Froodara    = как Nauvis→Vulcanus (reverse)
+-- 1) From task:
+--   Secretas→Tapatrion and Secretas→Ithurice = like Secretas→Frozeta
+--   Gleba→Gerkizia and Gleba→Quadromire      = like Gleba→Terrapalus
+--   Fulgora→Tchekor                         = like Fulgora→Cerys
+--   Vulcanus→Zzhora and Vulcanus→Froodara    = like Nauvis→Vulcanus (reverse)
 USER_PRESETS[#USER_PRESETS+1] = {
   kind = "copy-many",
   data = {
@@ -296,7 +296,7 @@ USER_PRESETS[#USER_PRESETS+1] = {
     },
     {
       -- asteroid-belt-outer-edge → cubium
-      -- → vesta → {hexalith, nekohaven, mickora, corruption} (reverse для всех)
+      -- → vesta → {hexalith, nekohaven, mickora, corruption} (reverse for all)
       src = { from = "asteroid-belt-outer-edge", to = "cubium" },
       dst = {
         { from = "vesta", to = "hexalith" },
@@ -308,7 +308,7 @@ USER_PRESETS[#USER_PRESETS+1] = {
   }
 }
 
--- 2) (Опционально) пример кастомной полной замены:
+-- 2) (Optional) example of custom complete replacement:
 -- USER_PRESETS[#USER_PRESETS+1] = {
 --   kind = "set",
 --   data = {
@@ -325,7 +325,7 @@ USER_PRESETS[#USER_PRESETS+1] = {
 --   }
 -- }
 
--- Выполняем пресеты сразу при require
+-- Execute presets immediately on require
 for _, pr in ipairs(USER_PRESETS) do
   if pr.kind == "copy-many" then
     M.copy_many(pr.data)

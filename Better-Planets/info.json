@@ -11,7 +11,6 @@
     "PlanetsLib",
     "Redrawn-Space-Connections",
     "redrawn-space-compat-fixes",
-    "? Cosmic-Social-Distancing",
     "? PlanetsLibTiers",
     "? Starmap_Nexuz",
     "? dea-dia-system",
@@ -50,7 +49,12 @@
     "? planet-froodara",
     "? planet-mickora",
     "? terraria",
-    "? exotic-space-industries",
-    "? exotic-space-industries-remembrance"
+    "(?) exotic-space-industries",
+    "(?) exotic-space-industries-remembrance",
+    "! Cosmic-Social-Distancing",
+    "! secretas-orbit-patch",
+    "! terrapalus-orbit-patch",
+    "! rabbasca-orbit-patch",
+    "! panglia-orbit-patch"
   ]
 }
