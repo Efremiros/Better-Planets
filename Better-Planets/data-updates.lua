@@ -477,6 +477,20 @@ local function apply_object(name)
   local use_d   = (new_r   ~= nil) and new_r or base_d
 
   proto.orbit = proto.orbit or {}
+
+  local par = proto.orbit.parent
+
+  -- If object has a planet parent (moon of planet), use lib_update_orbit like case 2
+  if par and par.type=="planet" and data.raw.planet[par.name] then
+    lib_update_orbit(kind, name, proto.orbit.parent, use_or, use_d)
+    do
+      local changed = (new_deg ~= nil) or (new_r ~= nil and new_r ~= 0)
+      if changed then BP_OVERRIDDEN[name] = true end
+    end
+    return
+  end
+
+  -- Otherwise, set fields directly and calculate position
   proto.orientation       = norm01(use_or)
   proto.orbit.orientation = norm01(use_or)
   proto.distance          = use_d
