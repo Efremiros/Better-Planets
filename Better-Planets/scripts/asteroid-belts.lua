@@ -1,0 +1,311 @@
+-- scripts/asteroid_belts.lua
+-- Better Planets — Cloned asteroid belt locations from AsteroidBelt mod
+-- Allows creating multiple "exits" from asteroid belts at different positions
+-- Includes technology and space connection cloning
+
+local icon_dir = "__AsteroidBelt__/graphics/icon/"
+local tech_icon_dir = "__AsteroidBelt__/graphics/technology/"
+
+-- Check if AsteroidBelt mod is installed
+if not mods["AsteroidBelt"] then
+  log("[Better Planets] AsteroidBelt mod not found, skipping asteroid_belts.lua")
+  return
+end
+
+-- Check if the feature is enabled
+local setting = settings.startup["tr-enable-asteroid-belt-clones"]
+if not (setting and setting.value) then
+  log("[Better Planets] Asteroid belt clones disabled by setting")
+  return
+end
+
+-- ========= UTILITY FUNCTIONS =========
+
+local function deep_copy(obj)
+  if type(obj) ~= "table" then return obj end
+  local res = {}
+  for k, v in pairs(obj) do res[k] = deep_copy(v) end
+  return res
+end
+
+local function norm01(x)
+  if x == nil then return nil end
+  x = x - math.floor(x)
+  if x < 0 then x = x + 1 end
+  if x >= 1 then x = 0 end
+  return x
+end
+
+-- Convert degrees (CCW from North) to Factorio orientation (CW, [0,1))
+local function orientation_from_degrees(angle_deg)
+  if angle_deg == nil then return nil end
+  local deg = ((angle_deg % 360) + 360) % 360
+  local deg_cw = (360 - deg) % 360
+  return norm01(deg_cw / 360)
+end
+
+-- Get asteroid spawn definitions from original location
+local function get_asteroid_density(original_name)
+  local orig = data.raw["space-location"] and data.raw["space-location"][original_name]
+  if orig and orig.asteroid_spawn_definitions then
+    return deep_copy(orig.asteroid_spawn_definitions)
+  end
+  return nil
+end
+
+-- ========= CLONE CREATION FUNCTIONS =========
+
+-- Create a cloned space-location
+local function create_location_clone(params)
+  -- params: {
+  --   original_name: string (e.g., "asteroid-belt-inner-edge")
+  --   clone_name: string (e.g., "asteroid-belt-inner-edge-clone-1")
+  --   angle: number (degrees, 0-360)
+  --   radius: number (distance from sun)
+  --   solar_power: number (optional, copies from original if not provided)
+  -- }
+
+  local orig = data.raw["space-location"] and data.raw["space-location"][params.original_name]
+  if not orig then
+    log("[Better Planets] Original location not found: " .. params.original_name)
+    return nil
+  end
+
+  local clone = {
+    name = params.clone_name,
+    type = "space-location",
+    icon = orig.icon,
+    icon_size = orig.icon_size,
+
+    -- Use the same localized name as the original
+    localised_name = {"space-location-name." .. params.original_name},
+    localised_description = {"space-location-description." .. params.original_name},
+
+    redrawn_connections_keep = false,
+    redrawn_connections_exclude = false,
+
+    orientation = orientation_from_degrees(params.angle),
+    distance = params.radius,
+
+    starmap_icon = orig.starmap_icon,
+    starmap_icon_size = orig.starmap_icon_size,
+
+    draw_orbit = true,
+    fly_condition = false,
+    solar_power_in_space = params.solar_power or orig.solar_power_in_space,
+
+    asteroid_spawn_definitions = get_asteroid_density(params.original_name)
+  }
+
+  return clone
+end
+
+-- Create a cloned technology
+local function create_technology_clone(params)
+  -- params: {
+  --   original_tech: string (e.g., "space-discovery-asteroid-belt")
+  --   clone_tech: string (e.g., "space-discovery-asteroid-belt-clone-1")
+  --   unlock_locations: table of strings (space locations to unlock)
+  --   localised_name_suffix: string (e.g., " - Exit 1")
+  -- }
+
+  local orig = data.raw.technology and data.raw.technology[params.original_tech]
+  if not orig then
+    log("[Better Planets] Original technology not found: " .. params.original_tech)
+    return nil
+  end
+
+  local clone = {
+    name = params.clone_tech,
+    type = "technology",
+    icon = orig.icon,
+    icon_size = orig.icon_size,
+
+    localised_name = {"", {"technology-name." .. params.original_tech}, params.localised_name_suffix or ""},
+    localised_description = {"technology-description." .. params.original_tech},
+
+    essential = orig.essential,
+    prerequisites = deep_copy(orig.prerequisites),
+    unit = deep_copy(orig.unit),
+    effects = {}
+  }
+
+  -- Add unlock effects for specified locations
+  for _, location in ipairs(params.unlock_locations) do
+    table.insert(clone.effects, {
+      type = "unlock-space-location",
+      space_location = location
+    })
+  end
+
+  return clone
+end
+
+-- ========= CLONE DEFINITIONS =========
+-- Define all clones here with their parameters
+
+local clones_to_create = {
+  -- Pair 1: North
+  {
+    inner = {
+      original_name = "asteroid-belt-inner-edge",
+      clone_name = "asteroid-belt-inner-edge-1",
+      angle = 1,
+      radius = 31,
+      solar_power = 75
+    },
+    outer = {
+      original_name = "asteroid-belt-outer-edge",
+      clone_name = "asteroid-belt-outer-edge-1",
+      angle = 1,
+      radius = 36,
+      solar_power = 70
+    },
+    technology = {
+      original_tech = "space-discovery-asteroid-belt",
+      clone_tech = "space-discovery-asteroid-belt-c-1",
+    }
+  },
+
+  -- Pair 2: West
+  {
+    inner = {
+      original_name = "asteroid-belt-inner-edge",
+      clone_name = "asteroid-belt-inner-edge-2",
+      angle = 90,
+      radius = 31,
+      solar_power = 75
+    },
+    outer = {
+      original_name = "asteroid-belt-outer-edge",
+      clone_name = "asteroid-belt-outer-edge-2",
+      angle = 87,
+      radius = 36,
+      solar_power = 70
+    },
+    technology = {
+      original_tech = "space-discovery-asteroid-belt",
+      clone_tech = "space-discovery-asteroid-belt-c-2",
+    }
+  },
+
+  -- Pair 3: East
+  {
+    inner = {
+      original_name = "asteroid-belt-inner-edge",
+      clone_name = "asteroid-belt-inner-edge-3",
+      angle = 180,
+      radius = 31,
+      solar_power = 75
+    },
+    outer = {
+      original_name = "asteroid-belt-outer-edge",
+      clone_name = "asteroid-belt-outer-edge-3",
+      angle = 180,
+      radius = 36,
+      solar_power = 70
+    },
+    technology = {
+      original_tech = "space-discovery-asteroid-belt",
+      clone_tech = "space-discovery-asteroid-belt-c-3",
+    }
+  },
+
+  -- Outer asteroid belt #1 (Solar system - shattered planet)
+  {
+    inner = {
+      original_name = "asteroid-belt-inner-edge",
+      clone_name = "asteroid-belt-inner-edge-4",
+      angle = 270,
+      radius = 56,
+      solar_power = 5
+    },
+    technology = {
+      original_tech = "space-discovery-asteroid-belt",
+      clone_tech = "promethium-science-pack",
+    }
+  },
+
+  -- Outer asteroid belt #2 (Solar system - Dea Dia / Redstar)
+  {
+    inner = {
+      original_name = "asteroid-belt-inner-edge",
+      clone_name = "asteroid-belt-inner-edge-5",
+      angle = 110,
+      radius = 56,
+      solar_power = 5
+    },
+    technology = {
+      original_tech = "space-discovery-asteroid-belt",
+      clone_tech = "space-discovery-asteroid-belt-c-5",
+    }
+  },
+
+  -- Outer asteroid belt #3 (Secretas - Nexus )
+  {
+    inner = {
+      original_name = "asteroid-belt-inner-edge",
+      clone_name = "asteroid-belt-inner-edge-6",
+      angle = 330,
+      radius = 56,
+      solar_power = 5
+    },
+    technology = {
+      original_tech = "space-discovery-asteroid-belt",
+      clone_tech = "space-discovery-asteroid-belt-c-6",
+    }
+  },
+
+}
+
+
+-- ========= CREATE CLONES =========
+
+local locations_to_extend = {}
+local technologies_to_extend = {}
+
+for i, pair in ipairs(clones_to_create) do
+  -- Create inner location clone
+  if pair.inner then
+    local inner_clone = create_location_clone(pair.inner)
+    if inner_clone then
+      table.insert(locations_to_extend, inner_clone)
+    end
+  end
+
+  -- Create outer location clone
+  if pair.outer then
+    local outer_clone = create_location_clone(pair.outer)
+    if outer_clone then
+      table.insert(locations_to_extend, outer_clone)
+    end
+  end
+
+  -- Create technology clone
+  if pair.technology then
+    local unlock_locations = {}
+    if pair.inner then table.insert(unlock_locations, pair.inner.clone_name) end
+    if pair.outer then table.insert(unlock_locations, pair.outer.clone_name) end
+
+    local tech_clone = create_technology_clone({
+      original_tech = pair.technology.original_tech,
+      clone_tech = pair.technology.clone_tech,
+      unlock_locations = unlock_locations,
+      localised_name_suffix = pair.technology.localised_name_suffix
+    })
+    if tech_clone then
+      table.insert(technologies_to_extend, tech_clone)
+    end
+  end
+end
+
+-- Apply all clones to the game
+if #locations_to_extend > 0 then
+  data:extend(locations_to_extend)
+  log("[Better Planets] Created " .. #locations_to_extend .. " cloned asteroid belt locations")
+end
+
+if #technologies_to_extend > 0 then
+  data:extend(technologies_to_extend)
+  log("[Better Planets] Created " .. #technologies_to_extend .. " cloned technologies")
+end
