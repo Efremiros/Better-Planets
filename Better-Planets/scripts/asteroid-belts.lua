@@ -63,6 +63,7 @@ local function create_location_clone(params)
   --   angle: number (degrees, 0-360)
   --   radius: number (distance from sun)
   --   solar_power: number (optional, copies from original if not provided)
+  --   custom_locale_key: string (optional, custom locale key for this clone)
   -- }
 
   local orig = data.raw["space-location"] and data.raw["space-location"][params.original_name]
@@ -77,9 +78,9 @@ local function create_location_clone(params)
     icon = orig.icon,
     icon_size = orig.icon_size,
 
-    -- Use the same localized name as the original
-    localised_name = {"space-location-name." .. params.original_name},
-    localised_description = {"space-location-description." .. params.original_name},
+    -- Use custom locale key if provided, otherwise use original's name
+    localised_name = params.custom_locale_key and {"space-location-name." .. params.custom_locale_key} or {"space-location-name." .. params.original_name},
+    localised_description = params.custom_locale_key and {"space-location-description." .. params.custom_locale_key} or {"space-location-description." .. params.original_name},
 
     redrawn_connections_keep = false,
     redrawn_connections_exclude = false,
@@ -107,6 +108,7 @@ local function create_technology_clone(params)
   --   clone_tech: string (e.g., "space-discovery-asteroid-belt-clone-1")
   --   unlock_locations: table of strings (space locations to unlock)
   --   localised_name_suffix: string (e.g., " - Exit 1")
+  --   custom_locale_key: string (optional, custom locale key for this clone)
   -- }
 
   local orig = data.raw.technology and data.raw.technology[params.original_tech]
@@ -121,8 +123,8 @@ local function create_technology_clone(params)
     icon = orig.icon,
     icon_size = orig.icon_size,
 
-    localised_name = {"", {"technology-name." .. params.original_tech}, params.localised_name_suffix or ""},
-    localised_description = {"technology-description." .. params.original_tech},
+    localised_name = params.custom_locale_key and {"technology-name." .. params.custom_locale_key} or {"", {"technology-name." .. params.original_tech}, params.localised_name_suffix or ""},
+    localised_description = params.custom_locale_key and {"technology-description." .. params.custom_locale_key} or {"technology-description." .. params.original_tech},
 
     essential = orig.essential,
     prerequisites = deep_copy(orig.prerequisites),
@@ -164,6 +166,7 @@ local clones_to_create = {
     technology = {
       original_tech = "space-discovery-asteroid-belt",
       clone_tech = "space-discovery-asteroid-belt-c-1",
+      custom_locale_key = "space-discovery-asteroid-belt-c-1"
     }
   },
 
@@ -186,10 +189,11 @@ local clones_to_create = {
     technology = {
       original_tech = "space-discovery-asteroid-belt",
       clone_tech = "space-discovery-asteroid-belt-c-2",
+      custom_locale_key = "space-discovery-asteroid-belt-c-2"
     }
   },
 
-  -- Pair 3: East
+  -- Pair 3: South
   {
     inner = {
       original_name = "asteroid-belt-inner-edge",
@@ -208,51 +212,58 @@ local clones_to_create = {
     technology = {
       original_tech = "space-discovery-asteroid-belt",
       clone_tech = "space-discovery-asteroid-belt-c-3",
+      custom_locale_key = "space-discovery-asteroid-belt-c-3"
     }
   },
 
-  -- Outer asteroid belt #1 (Solar system - shattered planet)
+  -- Outer asteroid belt #1 (Solar system - shattered planet) - Kuiper belt
   {
     inner = {
       original_name = "asteroid-belt-inner-edge",
       clone_name = "asteroid-belt-inner-edge-4",
       angle = 270,
       radius = 56,
-      solar_power = 5
+      solar_power = 5,
+      custom_locale_key = "kuiper-belt-4"
     },
     technology = {
       original_tech = "space-discovery-asteroid-belt",
-      clone_tech = "promethium-science-pack",
+      clone_tech = "space-discovery-asteroid-belt-c-4",
+      custom_locale_key = "space-discovery-asteroid-belt-c-4"
     }
   },
 
-  -- Outer asteroid belt #2 (Solar system - Dea Dia / Redstar)
+  -- Outer asteroid belt #2 (Solar system - Dea Dia / Redstar) - Kuiper belt
   {
     inner = {
       original_name = "asteroid-belt-inner-edge",
       clone_name = "asteroid-belt-inner-edge-5",
       angle = 110,
       radius = 56,
-      solar_power = 5
+      solar_power = 5,
+      custom_locale_key = "kuiper-belt-5"
     },
     technology = {
       original_tech = "space-discovery-asteroid-belt",
       clone_tech = "space-discovery-asteroid-belt-c-5",
+      custom_locale_key = "space-discovery-asteroid-belt-c-5"
     }
   },
 
-  -- Outer asteroid belt #3 (Secretas - Nexus )
+  -- Outer asteroid belt #3 (Secretas - Nexus ) - Kuiper belt
   {
     inner = {
       original_name = "asteroid-belt-inner-edge",
       clone_name = "asteroid-belt-inner-edge-6",
       angle = 330,
       radius = 56,
-      solar_power = 5
+      solar_power = 5,
+      custom_locale_key = "kuiper-belt-6"
     },
     technology = {
       original_tech = "space-discovery-asteroid-belt",
       clone_tech = "space-discovery-asteroid-belt-c-6",
+      custom_locale_key = "space-discovery-asteroid-belt-c-6"
     }
   },
 
@@ -291,7 +302,8 @@ for i, pair in ipairs(clones_to_create) do
       original_tech = pair.technology.original_tech,
       clone_tech = pair.technology.clone_tech,
       unlock_locations = unlock_locations,
-      localised_name_suffix = pair.technology.localised_name_suffix
+      localised_name_suffix = pair.technology.localised_name_suffix,
+      custom_locale_key = pair.technology.custom_locale_key
     })
     if tech_clone then
       table.insert(technologies_to_extend, tech_clone)
