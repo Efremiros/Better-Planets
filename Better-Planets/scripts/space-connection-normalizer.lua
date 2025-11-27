@@ -50,7 +50,7 @@ end
 -- Round to nearest 5000 km
 local function round_to_5000(n)
   -- example: 21000 -> 20000; 17000 -> 15000; 18000 -> 20000; 33000 -> 35000
-  local step = 5000
+  local step = 10000
   return math.floor((n + step/2) / step) * step
 end
 

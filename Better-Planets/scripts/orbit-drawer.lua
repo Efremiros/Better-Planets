@@ -67,7 +67,7 @@ do
     frozeta=true, prosephina=true, lemures=true,
     tchekor=true, quadromire=true, gerkizia=true, froodara=true, zzhora=true,
     hexalith=true, nekohaven=true, mickora=true, corruption=true, tapatrion=true,
-    ithurice=true,
+    ithurice=true, rabbasca = true,
   }
 
   -- Special parent systems

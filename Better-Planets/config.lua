@@ -32,10 +32,10 @@ local DEFAULTS = {
   {name="linox-planet_linox", mod="linox", radius=7, angle=280},
 
   {name="arig", mod={"planetaris-arig","planetaris-unbounded"}, radius=12, angle=150},
-  {name="hyarion", mod={"planetaris-hyarion","planetaris-unbounded"}, radius=26, angle=160},
+  {name="hyarion", mod={"planetaris-hyarion","planetaris-unbounded"}, radius=26, angle=180},
 
-  {name="rubia", mod="rubia", radius=30, angle=300},
-  {name="castra", mod="castra", radius=20, angle=230},
+  {name="rubia", mod="rubia", radius=30, angle=295},
+  {name="castra", mod="castra", radius=20, angle=245},
 
   {name="panglia", mod="panglia_planet", radius=46, angle=330, scale="2.5"},
 
@@ -74,16 +74,16 @@ local DEFAULTS = {
   {name="skewer_lost_beyond", mod="skewer_shattered_planet", radius=560, angle=272},
 
   {name="sye-nauvis-ne", mod="Starmap_Nexuz", radius=70, angle=330},
-  {name="sye-nexuz-sw", mod="Starmap_Nexuz", radius=56, angle=155},
+  {name="sye-nexuz-sw", mod="Starmap_Nexuz", radius=56, angle=150},
   {name="nexuz-background", mod="Starmap_Nexuz"},
   {name="arrakis", mod="planet-arrakis", radius=18, angle=140, scale="1.5"},
-  {name="maraxsis", mod="maraxsis", radius=25, angle=110, scale="1.8"},
+  {name="maraxsis", mod="maraxsis", radius=25, angle=100, scale="1.8"},
   {name="aiur", mod="erm_toss", radius=39, angle=290},
   {name="char", mod="erm_zerg", radius=14, angle=10, scale="1.5"},
   {name="earth", mod="erm_redarmy", radius=30, angle=35},
   {name="corrundum", mod="corrundum", radius=35, angle=195},
   {name="tiber", mod="Factorio-Tiberium", radius=22, angle=240},
-  {name="tenebris", mod={"tenebris-prime","tenebris"}, radius=56, angle=330},
+  {name="tenebris", mod={"tenebris-prime","tenebris"}, radius=56, angle=340},
 
   {name="star-dea-dia", mod="dea-dia-system", radius=200, angle=65},
   {name="dea-dia-system-edge", mod="dea-dia-system", radius=20, angle=220},

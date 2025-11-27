@@ -21,6 +21,12 @@ local function set_property(planet_name, property_name, value)
   local planet = data.raw.planet[planet_name]
   if not planet then return false end
 
+  -- Special case: solar-power-in-space is a direct property of space-location, not a surface property
+  if property_name == "solar-power-in-space" then
+    planet.solar_power_in_space = value
+    return true
+  end
+
   -- Check if the property actually exists in the game
   if not (data.raw["surface-property"] and data.raw["surface-property"][property_name]) then
     -- Property doesn't exist (e.g., cerys-ambient-radiation without Cerys mod)
@@ -83,6 +89,20 @@ local PLANET_PROPERTIES = {
     ["solar-power-in-space"] = 800,
   },
 
+  ["tapatrion"] = {
+    temperature = 193,
+    ["solar-power-in-space"] = 50,
+  },
+
+  ["ithurice"] = {
+    temperature = 128,
+    ["solar-power-in-space"] = 40,
+  },
+
+  ["frozeta"] = {
+    temperature = 143,
+  },
+
   ["igrys"] = {
     temperature = 320,
     ["solar-power"] = 60,
@@ -121,11 +141,16 @@ local PLANET_PROPERTIES = {
   },
 
   ["linox-planet_linox"] = {
+    temperature = 825,
     ["solar-power-in-space"] = 4000,
   },
 
   ["panglia"] = {
     ["solar-power-in-space"] = 50,
+  },
+
+  ["arig"] = {
+    ["solar-power-in-space"] = 348,
   },
 
   ["cubium"] = {

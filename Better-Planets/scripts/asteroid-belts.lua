@@ -76,13 +76,18 @@ local function create_location_clone(params)
     name = params.clone_name,
     type = "space-location",
     icon =
-    (name == "asteroid-belt-inner-edge-4"
-     or name == "asteroid-belt-inner-edge-5"
-     or name == "asteroid-belt-inner-edge-6")
+    (params.clone_name == "asteroid-belt-inner-edge-clone4"
+     or params.clone_name == "asteroid-belt-inner-edge-clone5"
+     or params.clone_name == "asteroid-belt-inner-edge-clone6")
     and "__Better-Planets__/graphics/KuiperBelt.png"
     or orig.icon,
 
-    icon_size = orig.icon_size,
+    icon_size =
+    (params.clone_name == "asteroid-belt-inner-edge-clone4"
+     or params.clone_name == "asteroid-belt-inner-edge-clone5"
+     or params.clone_name == "asteroid-belt-inner-edge-clone6")
+    and 512
+    or orig.icon_size,
 
     -- Use custom locale key if provided, otherwise use original's name
     localised_name = params.custom_locale_key and {"space-location-name." .. params.custom_locale_key} or {"space-location-name." .. params.original_name},
@@ -95,13 +100,18 @@ local function create_location_clone(params)
     distance = params.radius,
 
     starmap_icon =
-    (name == "asteroid-belt-inner-edge-4"
-     or name == "asteroid-belt-inner-edge-5"
-     or name == "asteroid-belt-inner-edge-6")
+    (params.clone_name == "asteroid-belt-inner-edge-clone4"
+     or params.clone_name == "asteroid-belt-inner-edge-clone5"
+     or params.clone_name == "asteroid-belt-inner-edge-clone6")
     and "__Better-Planets__/graphics/KuiperBelt.png"
     or orig.starmap_icon,
 
-    starmap_icon_size = orig.starmap_icon_size,
+    starmap_icon_size =
+    (params.clone_name == "asteroid-belt-inner-edge-clone4"
+     or params.clone_name == "asteroid-belt-inner-edge-clone5"
+     or params.clone_name == "asteroid-belt-inner-edge-clone6")
+    and 512
+    or orig.starmap_icon_size,
 
     draw_orbit = true,
     fly_condition = false,
@@ -132,8 +142,19 @@ local function create_technology_clone(params)
   local clone = {
     name = params.clone_tech,
     type = "technology",
-    icon = orig.icon,
-    icon_size = orig.icon_size,
+    icon =
+    (params.clone_tech == "space-discovery-asteroid-belt-clone4"
+     or params.clone_tech == "space-discovery-asteroid-belt-clone5"
+     or params.clone_tech == "space-discovery-asteroid-belt-clone6")
+    and "__Better-Planets__/graphics/KuiperBelt.png"
+    or orig.icon,
+
+    icon_size =
+    (params.clone_tech == "space-discovery-asteroid-belt-clone4"
+     or params.clone_tech == "space-discovery-asteroid-belt-clone5"
+     or params.clone_tech == "space-discovery-asteroid-belt-clone6")
+    and 512
+    or orig.icon_size,
 
     localised_name = params.custom_locale_key and {"technology-name." .. params.custom_locale_key} or {"", {"technology-name." .. params.original_tech}, params.localised_name_suffix or ""},
     localised_description = params.custom_locale_key and {"technology-description." .. params.custom_locale_key} or {"technology-description." .. params.original_tech},
@@ -163,22 +184,22 @@ local clones_to_create = {
   {
     inner = {
       original_name = "asteroid-belt-inner-edge",
-      clone_name = "asteroid-belt-inner-edge-1",
+      clone_name = "asteroid-belt-inner-edge-clone1",
       angle = 1,
       radius = 31,
       solar_power = 75
     },
     outer = {
       original_name = "asteroid-belt-outer-edge",
-      clone_name = "asteroid-belt-outer-edge-1",
+      clone_name = "asteroid-belt-outer-edge-clone1",
       angle = 1,
       radius = 36,
       solar_power = 70
     },
     technology = {
       original_tech = "space-discovery-asteroid-belt",
-      clone_tech = "space-discovery-asteroid-belt-c-1",
-      custom_locale_key = "space-discovery-asteroid-belt-c-1"
+      clone_tech = "space-discovery-asteroid-belt-clone1",
+      custom_locale_key = "space-discovery-asteroid-belt-clone1"
     }
   },
 
@@ -186,22 +207,22 @@ local clones_to_create = {
   {
     inner = {
       original_name = "asteroid-belt-inner-edge",
-      clone_name = "asteroid-belt-inner-edge-2",
+      clone_name = "asteroid-belt-inner-edge-clone2",
       angle = 90,
       radius = 31,
       solar_power = 75
     },
     outer = {
       original_name = "asteroid-belt-outer-edge",
-      clone_name = "asteroid-belt-outer-edge-2",
+      clone_name = "asteroid-belt-outer-edge-clone2",
       angle = 87,
       radius = 36,
       solar_power = 70
     },
     technology = {
       original_tech = "space-discovery-asteroid-belt",
-      clone_tech = "space-discovery-asteroid-belt-c-2",
-      custom_locale_key = "space-discovery-asteroid-belt-c-2"
+      clone_tech = "space-discovery-asteroid-belt-clone2",
+      custom_locale_key = "space-discovery-asteroid-belt-clone2"
     }
   },
 
@@ -209,22 +230,22 @@ local clones_to_create = {
   {
     inner = {
       original_name = "asteroid-belt-inner-edge",
-      clone_name = "asteroid-belt-inner-edge-3",
+      clone_name = "asteroid-belt-inner-edge-clone3",
       angle = 180,
       radius = 31,
       solar_power = 75
     },
     outer = {
       original_name = "asteroid-belt-outer-edge",
-      clone_name = "asteroid-belt-outer-edge-3",
+      clone_name = "asteroid-belt-outer-edge-clone3",
       angle = 180,
       radius = 36,
       solar_power = 70
     },
     technology = {
       original_tech = "space-discovery-asteroid-belt",
-      clone_tech = "space-discovery-asteroid-belt-c-3",
-      custom_locale_key = "space-discovery-asteroid-belt-c-3"
+      clone_tech = "space-discovery-asteroid-belt-clone3",
+      custom_locale_key = "space-discovery-asteroid-belt-clone3"
     }
   },
 
@@ -232,7 +253,7 @@ local clones_to_create = {
   {
     inner = {
       original_name = "asteroid-belt-inner-edge",
-      clone_name = "asteroid-belt-inner-edge-4",
+      clone_name = "asteroid-belt-inner-edge-clone4",
       angle = 270,
       radius = 56,
       solar_power = 5,
@@ -240,8 +261,8 @@ local clones_to_create = {
     },
     technology = {
       original_tech = "space-discovery-asteroid-belt",
-      clone_tech = "space-discovery-asteroid-belt-c-4",
-      custom_locale_key = "space-discovery-asteroid-belt-c-4"
+      clone_tech = "space-discovery-asteroid-belt-clone4",
+      custom_locale_key = "space-discovery-asteroid-belt-clone4"
     }
   },
 
@@ -249,7 +270,7 @@ local clones_to_create = {
   {
     inner = {
       original_name = "asteroid-belt-inner-edge",
-      clone_name = "asteroid-belt-inner-edge-5",
+      clone_name = "asteroid-belt-inner-edge-clone5",
       angle = 110,
       radius = 56,
       solar_power = 5,
@@ -257,8 +278,8 @@ local clones_to_create = {
     },
     technology = {
       original_tech = "space-discovery-asteroid-belt",
-      clone_tech = "space-discovery-asteroid-belt-c-5",
-      custom_locale_key = "space-discovery-asteroid-belt-c-5"
+      clone_tech = "space-discovery-asteroid-belt-clone5",
+      custom_locale_key = "space-discovery-asteroid-belt-clone5"
     }
   },
 
@@ -266,7 +287,7 @@ local clones_to_create = {
   {
     inner = {
       original_name = "asteroid-belt-inner-edge",
-      clone_name = "asteroid-belt-inner-edge-6",
+      clone_name = "asteroid-belt-inner-edge-clone6",
       angle = 330,
       radius = 56,
       solar_power = 5,
@@ -274,8 +295,8 @@ local clones_to_create = {
     },
     technology = {
       original_tech = "space-discovery-asteroid-belt",
-      clone_tech = "space-discovery-asteroid-belt-c-6",
-      custom_locale_key = "space-discovery-asteroid-belt-c-6"
+      clone_tech = "space-discovery-asteroid-belt-clone6",
+      custom_locale_key = "space-discovery-asteroid-belt-clone6"
     }
   },
 

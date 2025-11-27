@@ -1,4 +1,22 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+Date: 2025-11-27
+  Major Features:
+    - Refactored many files, moved the configuration file, added new locations, added new options in the mod settings.
+    - Marked orbit-patch mods as conflicting dependencies, as Better Planets draws orbits by itself.
+    - Marked Cosmic Social Distancing mod as conflicting dependency, since it’s not needed and was causing some strange behavior.
+  New Features:
+    - Added Master switches to the mod configuration. By default, mod uses predefined params, but you don't need to update them manually everytime.
+    - Added new Asteroid Belts locations (requires Asteroid Belt mod).
+    - Added new technologies.
+    - Added planet properties, fixing some planets to match their locations.
+    - Added Rabbasca and Linox planets to the configuration.
+    - Reorganized planets on the starmap to accurately align with chronological progression during gameplay.
+  Bug fixes:
+    - Fixed Zzhora and Froodara (moons) orbiting issues.
+    - Fixed config and dependencies.
+    - Fixed bug, when additional connections was added.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.7
 Date: 2025-11-20
   Bug fixes:

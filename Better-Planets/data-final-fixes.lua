@@ -130,5 +130,6 @@ if settings.startup["tr-enable-connection-normalizer"] and settings.startup["tr-
   require("__Better-Planets__/scripts/space-connection-normalizer")
 end
 
--- Always load asteroid streams (no toggle for this yet)
 require("__Better-Planets__/scripts/asteroid-streams")
+
+require("__Better-Planets__/scripts/planet-properties")

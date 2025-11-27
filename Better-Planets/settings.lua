@@ -1,7 +1,6 @@
 local function provider_ok(name, mod_spec)
   if mod_spec == true then return true end
-  if mod_spec == nil then
-    return heuristic_has_provider(name) or false
+  if mod_spec == nil then return false
   elseif type(mod_spec) == "string" then
     return mods[mod_spec] ~= nil
   else -- table of possible mods
@@ -169,6 +168,15 @@ data:extend({
     localised_name = {"bp.enable-connection-normalizer"},
     localised_description = {"bp.desc-enable-connection-normalizer"},
     order = "000-d-connection-normalizer"
+  },
+  {
+    type = "bool-setting",
+    name = "tr-enable-asteroid-belt-clones",
+    setting_type = "startup",
+    default_value = true,
+    localised_name = {"bp.enable-asteroid-belt-clones"},
+    localised_description = {"bp.desc-enable-asteroid-belt-clones"},
+    order = "000-e-asteroid-belt-clones"
   }
 })
 

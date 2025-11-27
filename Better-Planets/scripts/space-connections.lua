@@ -65,11 +65,41 @@ end
 --   source_to (string, optional)   — source connection "to" location (where this was copied from)
 -- If source_from and source_to are provided, ALL parameters are deep-copied from the source connection
 -- (including asteroid streams, length, order, etc.), unless explicitly overridden in opts.
+-- If only length is provided (no source_from/source_to), and connection already exists, just override the length.
 -- Works with connections from any mod or vanilla.
 function C.ensure(from_name, to_name, opts)
   opts = opts or {}
   local source_from = opts.source_from
   local source_to = opts.source_to
+
+  if not (from_name and to_name) then return false end
+
+  local resolved_from = resolve_endpoint(from_name)
+  local resolved_to   = resolve_endpoint(to_name)
+
+  if not (resolved_from and resolved_to) then
+    return false
+  end
+
+  -- If only length is provided (no source_from/source_to), try to find and update existing connection
+  if opts.length and not (source_from or source_to) then
+    if data.raw["space-connection"] then
+      -- Search through ALL space-connections to find one matching the endpoints
+      for conn_name, conn in pairs(data.raw["space-connection"]) do
+        if conn and type(conn.from) == "string" and type(conn.to) == "string" then
+          local matches = (conn.from == resolved_from and conn.to == resolved_to)
+                       or (conn.from == resolved_to and conn.to == resolved_from)
+          if matches then
+            -- Found existing connection, just override the length
+            conn.length = opts.length
+            return true
+          end
+        end
+      end
+    end
+    -- If no existing connection found and only length provided, do nothing
+    return false
+  end
 
   -- Try to find and copy from source connection if specified
   local source_connection = nil
@@ -91,15 +121,6 @@ function C.ensure(from_name, to_name, opts)
         end
       end
     end
-  end
-
-  if not (from_name and to_name) then return false end
-
-  local resolved_from = resolve_endpoint(from_name)
-  local resolved_to   = resolve_endpoint(to_name)
-
-  if not (resolved_from and resolved_to) then
-    return false
   end
 
   local cname = "bp-conn-"..resolved_from.."__"..resolved_to
@@ -269,37 +290,31 @@ BetterPlanetsConnections.ensure = C.ensure
 -- Removing connections
 
 --Incorrect Nexus connections
-C.remove("sye-nexuz-sw", "solar-system-edge")
---C.remove("solar-system-edge", "corrundum")
-C.remove("sye-nauvis-ne", "maraxsis")
+C.remove("solar-system-edge", "sye-nexuz-sw")
+--C.remove("sye-nauvis-ne", "maraxsis")
 C.remove("maraxsis-trench", "cube2")
 C.remove("sye-nauvis-ne", "earth")
 
 --Refactoring Redstar & Dea Dia connections to one Gate connection
 C.remove("fulgora", "dea-dia-system-edge")
-C.remove("calidus-senestella-gate-calidus", "calidus-senestella-gate-senestella")
+C.ensure("calidus-senestella-gate-calidus", "calidus-senestella-gate-senestella", { length = 1000 })
+C.ensure("calidus-senestella-gate-calidus", "dea-dia-system-edge", { source_from = "calidus-senestella-gate-calidus", source_to = "calidus-senestella-gate-senestella" })
 
 --Other fixes
 C.remove("vesta", "cube1")
 C.remove("solar-system-edge", "sye-nauvis-ne")
 C.remove("secretas", "sye-nauvis-ne")
-C.remove("vesta", "asteroid-belt-inner-edge-5")
+C.remove("vesta", "asteroid-belt-inner-edge-clone5")
 C.remove("omnia", "sye-nauvis-ne")
-
--- Creating new connections:
-
---Solar system fixes
-C.ensure("calidus-senestella-gate-calidus", "dea-dia-system-edge", { length = 1000 })
-C.ensure("calidus-senestella-gate-calidus", "calidus-senestella-gate-senestella", { length = 1000 })
---C.ensure("asteroid-belt-outer-edge", "asteroid-belt-inner-edge-4", { source_from = "asteroid-belt-outer-edge", source_to = "aquilo"})
+C.ensure("sye-nauvis-ne", "sye-nexuz-sw", { length = 300000 })
 
 --New exits from asteroid belt
-C.ensure("asteroid-belt-inner-edge-1", "asteroid-belt-outer-edge-1", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge", length = 20000 })
-C.ensure("asteroid-belt-inner-edge-2", "asteroid-belt-outer-edge-2", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge", length = 20000 })
-C.ensure("asteroid-belt-inner-edge-3", "asteroid-belt-outer-edge-3", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge", length = 20000 })
-C.ensure("asteroid-belt-inner-edge", "asteroid-belt-outer-edge", { source_from = "asteroid-belt-inner-edge-1", source_to = "asteroid-belt-outer-edge-1", length = 20000 })
+C.ensure("asteroid-belt-inner-edge", "asteroid-belt-outer-edge", { length = 20000 })
+C.ensure("asteroid-belt-inner-edge-clone1", "asteroid-belt-outer-edge-clone1", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge" })
+C.ensure("asteroid-belt-inner-edge-clone2", "asteroid-belt-outer-edge-clone2", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge"})
+C.ensure("asteroid-belt-inner-edge-clone3", "asteroid-belt-outer-edge-clone3", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge" })
 
 --Kuiper belt
-C.ensure("asteroid-belt-inner-edge-5", "calidus-senestella-gate-calidus", { source_from = "asteroid-belt-inner-edge-4", source_to = "solar-system-edge", length = 100000 })
-C.ensure("asteroid-belt-inner-edge-6", "sye-nauvis-ne", { source_from = "asteroid-belt-inner-edge-4", source_to = "solar-system-edge", length = 100000 })
---C.ensure("asteroid-belt-inner-edge-4", "solar-system-edge", { source_from = "asteroid-belt-inner-edge-4", source_to = "solar-system-edge", length = 100000})
+C.ensure("asteroid-belt-inner-edge-clone4", "solar-system-edge", { length = 100000})
+C.ensure("asteroid-belt-inner-edge-clone5", "calidus-senestella-gate-calidus", { source_from = "asteroid-belt-inner-edge-clone4", source_to = "solar-system-edge"})
+C.ensure("asteroid-belt-inner-edge-clone6", "sye-nauvis-ne", { source_from = "asteroid-belt-inner-edge-clone4", source_to = "solar-system-edge"})

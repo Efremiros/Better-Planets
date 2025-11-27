@@ -590,4 +590,9 @@ do
   end
 end
 
+-- Load asteroid belt clones if enabled
+if settings.startup["tr-enable-asteroid-belt-clones"] and settings.startup["tr-enable-asteroid-belt-clones"].value then
+  require("__Better-Planets__/scripts/asteroid-belts")
+end
+
 require("__Better-Planets__/scripts/orbit-drawer")

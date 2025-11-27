@@ -246,7 +246,6 @@ USER_PRESETS[#USER_PRESETS+1] = {
       src = { from = "gleba", to = "terrapalus" },
       dst = {
         { from = "gleba", to = "gerkizia"   },
-        { from = "gleba", to = "quadromire" },
       }
     },
     {
@@ -263,16 +262,12 @@ USER_PRESETS[#USER_PRESETS+1] = {
       }
     },
     {
-      -- aquilo → secretas  →  paracelsin → vesta
       src = { from = "aquilo", to = "secretas" },
       dst = {
         { from = "paracelsin", to = "vesta" },
       }
     },
     {
-      -- asteroid-belt-inner-edge → asteroid-belt-outer-edge
-      -- → calidus-senestella-gate-calidus → dea-dia-system-edge
-      -- → calidus-senestella-gate-calidus → calidus-senestella-gate-senestella
       src = { from = "asteroid-belt-inner-edge", to = "asteroid-belt-outer-edge" },
       dst = {
         { from = "calidus-senestella-gate-calidus", to = "dea-dia-system-edge" },
@@ -280,29 +275,18 @@ USER_PRESETS[#USER_PRESETS+1] = {
       }
     },
     {
-      -- asteroid-belt-outer-edge → aquilo  →  fulgora → calidus-senestella-gate-calidus (reverse)
-      src = { from = "asteroid-belt-outer-edge", to = "aquilo" },
-      dst = {
-        { from = "fulgora", to = "calidus-senestella-gate-calidus", reverse = true },
-      }
-    },
-    {
-      -- arig → hyarion  →  rubia → hyarion, castra → hyarion
-      src = { from = "arig", to = "hyarion" },
-      dst = {
-        { from = "rubia",  to = "hyarion" },
-        { from = "castra", to = "hyarion" },
-      }
-    },
-    {
-      -- asteroid-belt-outer-edge → cubium
-      -- → vesta → {hexalith, nekohaven, mickora, corruption} (reverse for all)
       src = { from = "asteroid-belt-outer-edge", to = "cubium" },
       dst = {
+        { from = "asteroid-belt-outer-edge-2", to = "igrys" },
+        { from = "asteroid-belt-outer-edge-2", to = "shchierbin" },
+        { from = "asteroid-belt-outer-edge-1", to = "omnia" },
+        { from = "asteroid-belt-outer-edge-1", to = "panglia" },
+
         { from = "vesta", to = "hexalith" },
         { from = "vesta", to = "nekohaven" },
         { from = "vesta", to = "mickora" },
         { from = "vesta", to = "corruption" },
+        { from = "vesta", to = "quadromire" },
       }
     },
   }
