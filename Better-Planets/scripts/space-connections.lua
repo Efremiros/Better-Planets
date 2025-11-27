@@ -5,6 +5,7 @@
 -- Capabilities:
 --  * Removing connections between two points (remove).
 --  * Creating new connections (ensure).
+--  * Cloning connections (source_from/source_to parameters deep-copy ALL properties including asteroid streams).
 --  * Soft fallback: if some location doesn't exist — we do nothing.
 --
 -- How to connect: add to data-final-fixes.lua the line:
@@ -12,7 +13,8 @@
 --
 -- If you want to call from another file, export is available through table
 --   BetterPlanetsConnections.remove(from, to)
---   BetterPlanetsConnections.ensure(from, to, length)
+--   BetterPlanetsConnections.ensure(from, to, opts)
+--     opts can include: length, order, source_from, source_to
 
 local C = {}
 
@@ -57,12 +59,39 @@ end
 
 -- Creating new connection between two points
 -- opts:
---   length (number, default 500) — connection length
---   order  (string, optional)    — sort order
+--   length (number, default 500)   — connection length
+--   order  (string, optional)      — sort order
+--   source_from (string, optional) — source connection "from" location (where this was copied from)
+--   source_to (string, optional)   — source connection "to" location (where this was copied from)
+-- If source_from and source_to are provided, ALL parameters are deep-copied from the source connection
+-- (including asteroid streams, length, order, etc.), unless explicitly overridden in opts.
+-- Works with connections from any mod or vanilla.
 function C.ensure(from_name, to_name, opts)
   opts = opts or {}
-  local length = opts.length or 500
-  local order  = opts.order
+  local source_from = opts.source_from
+  local source_to = opts.source_to
+
+  -- Try to find and copy from source connection if specified
+  local source_connection = nil
+  if source_from and source_to then
+    local resolved_source_from = resolve_endpoint(source_from)
+    local resolved_source_to = resolve_endpoint(source_to)
+
+    if resolved_source_from and resolved_source_to and data.raw["space-connection"] then
+      -- Search through ALL space-connections to find one matching the source endpoints
+      -- (works with vanilla, mods, and bp-conn- prefixed connections)
+      for conn_name, conn in pairs(data.raw["space-connection"]) do
+        if conn and type(conn.from) == "string" and type(conn.to) == "string" then
+          local matches = (conn.from == resolved_source_from and conn.to == resolved_source_to)
+                       or (conn.from == resolved_source_to and conn.to == resolved_source_from)
+          if matches then
+            source_connection = conn
+            break
+          end
+        end
+      end
+    end
+  end
 
   if not (from_name and to_name) then return false end
 
@@ -76,18 +105,43 @@ function C.ensure(from_name, to_name, opts)
   local cname = "bp-conn-"..resolved_from.."__"..resolved_to
 
   if not data.raw["space-connection"] or not data.raw["space-connection"][cname] then
-    data:extend({
-      {
-        type = "space-connection",
-        name = cname,
-        icon = "__core__/graphics/empty.png",
-        icon_size = 1,
-        from = resolved_from,
-        to   = resolved_to,
-        length = length,
-        order  = order or ("zzz["..cname.."]"),
-      }
-    })
+    local connection
+
+    -- If we have a source connection, deep copy ALL its properties (including asteroid streams)
+    if source_connection then
+      connection = table.deepcopy(source_connection)
+    else
+      connection = {}
+    end
+
+    -- Override required fields
+    connection.type = "space-connection"
+    connection.name = cname
+    connection.icon = "__core__/graphics/empty.png"
+    connection.icon_size = 1
+    connection.from = resolved_from
+    connection.to = resolved_to
+
+    -- Apply length and order: use opts if provided, otherwise keep from source, otherwise use defaults
+    if opts.length then
+      connection.length = opts.length
+    elseif not connection.length then
+      connection.length = 500
+    end
+
+    if opts.order then
+      connection.order = opts.order
+    elseif not connection.order then
+      connection.order = "zzz["..cname.."]"
+    end
+
+    -- Add source endpoints if provided (for tracking where connection was copied from)
+    if source_from and source_to then
+      connection.source_from = source_from
+      connection.source_to = source_to
+    end
+
+    data:extend({ connection })
     return true
   end
 
@@ -190,18 +244,62 @@ BetterPlanetsConnections.ensure = C.ensure
 -- ===================================================================
 -- TEMPLATES: you can manually add or remove connections
 -- ===================================================================
+--
+-- Example usage of source parameters:
+--
+--   1. Clone entire connection (including asteroid streams):
+--      C.ensure("new-planet-a", "new-planet-b", {
+--        source_from = "asteroid-belt-inner-edge",
+--        source_to = "asteroid-belt-outer-edge"
+--      })
+--      This deep-copies ALL properties: length, order, asteroid streams, etc.
+--
+--   2. Clone connection but override specific parameters:
+--      C.ensure("new-planet-a", "new-planet-b", {
+--        length = 2000,  -- Override with custom length
+--        source_from = "asteroid-belt-inner-edge",
+--        source_to = "asteroid-belt-outer-edge"
+--      })
+--      This copies everything from source (including asteroid streams), but uses custom length.
+--
+-- The 'source_from' and 'source_to' parameters identify which connection to deep-copy from.
+-- ALL properties (including asteroid streams) are automatically copied unless explicitly overridden in opts.
+
 
 -- Removing connections
-C.remove("sye-nexuz-sw", "solar-system-edge")
-C.remove("fulgora", "dea-dia-system-edge")
-C.remove("gleba", "calidus-senestella-gate-calidus")
-C.remove("calidus-senestella-gate-calidus", "calidus-senestella-gate-senestella")
-C.remove("solar-system-edge", "corrundum")
-C.remove("maraxsis-trench", "cube2")
-C.remove("vesta", "calidus-senestella-gate-calidus")
 
--- Creating new connections
+--Incorrect Nexus connections
+C.remove("sye-nexuz-sw", "solar-system-edge")
+--C.remove("solar-system-edge", "corrundum")
+C.remove("sye-nauvis-ne", "maraxsis")
+C.remove("maraxsis-trench", "cube2")
+C.remove("sye-nauvis-ne", "earth")
+
+--Refactoring Redstar & Dea Dia connections to one Gate connection
+C.remove("fulgora", "dea-dia-system-edge")
+C.remove("calidus-senestella-gate-calidus", "calidus-senestella-gate-senestella")
+
+--Other fixes
+C.remove("vesta", "cube1")
+C.remove("solar-system-edge", "sye-nauvis-ne")
+C.remove("secretas", "sye-nauvis-ne")
+C.remove("vesta", "asteroid-belt-inner-edge-5")
+C.remove("omnia", "sye-nauvis-ne")
+
+-- Creating new connections:
+
+--Solar system fixes
 C.ensure("calidus-senestella-gate-calidus", "dea-dia-system-edge", { length = 1000 })
 C.ensure("calidus-senestella-gate-calidus", "calidus-senestella-gate-senestella", { length = 1000 })
-C.ensure("fulgora", "calidus-senestella-gate-calidus", { length = 70000 })
-C.ensure("gleba", "fulgora", { length = 30000 })
+--C.ensure("asteroid-belt-outer-edge", "asteroid-belt-inner-edge-4", { source_from = "asteroid-belt-outer-edge", source_to = "aquilo"})
+
+--New exits from asteroid belt
+C.ensure("asteroid-belt-inner-edge-1", "asteroid-belt-outer-edge-1", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge", length = 20000 })
+C.ensure("asteroid-belt-inner-edge-2", "asteroid-belt-outer-edge-2", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge", length = 20000 })
+C.ensure("asteroid-belt-inner-edge-3", "asteroid-belt-outer-edge-3", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge", length = 20000 })
+C.ensure("asteroid-belt-inner-edge", "asteroid-belt-outer-edge", { source_from = "asteroid-belt-inner-edge-1", source_to = "asteroid-belt-outer-edge-1", length = 20000 })
+
+--Kuiper belt
+C.ensure("asteroid-belt-inner-edge-5", "calidus-senestella-gate-calidus", { source_from = "asteroid-belt-inner-edge-4", source_to = "solar-system-edge", length = 100000 })
+C.ensure("asteroid-belt-inner-edge-6", "sye-nauvis-ne", { source_from = "asteroid-belt-inner-edge-4", source_to = "solar-system-edge", length = 100000 })
+--C.ensure("asteroid-belt-inner-edge-4", "solar-system-edge", { source_from = "asteroid-belt-inner-edge-4", source_to = "solar-system-edge", length = 100000})
