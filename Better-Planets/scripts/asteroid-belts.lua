@@ -75,7 +75,13 @@ local function create_location_clone(params)
   local clone = {
     name = params.clone_name,
     type = "space-location",
-    icon = orig.icon,
+    icon =
+    (name == "asteroid-belt-inner-edge-4"
+     or name == "asteroid-belt-inner-edge-5"
+     or name == "asteroid-belt-inner-edge-6")
+    and "__Better-Planets__/graphics/KuiperBelt.png"
+    or orig.icon,
+
     icon_size = orig.icon_size,
 
     -- Use custom locale key if provided, otherwise use original's name
@@ -88,7 +94,13 @@ local function create_location_clone(params)
     orientation = orientation_from_degrees(params.angle),
     distance = params.radius,
 
-    starmap_icon = orig.starmap_icon,
+    starmap_icon =
+    (name == "asteroid-belt-inner-edge-4"
+     or name == "asteroid-belt-inner-edge-5"
+     or name == "asteroid-belt-inner-edge-6")
+    and "__Better-Planets__/graphics/KuiperBelt.png"
+    or orig.starmap_icon,
+
     starmap_icon_size = orig.starmap_icon_size,
 
     draw_orbit = true,
