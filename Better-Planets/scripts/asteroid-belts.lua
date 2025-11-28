@@ -12,10 +12,14 @@ if not mods["AsteroidBelt"] then
   return
 end
 
--- Check if the feature is enabled
-local setting = settings.startup["tr-enable-asteroid-belt-clones"]
-if not (setting and setting.value) then
-  log("[Better Planets] Asteroid belt clones disabled by setting")
+-- Check if either feature is enabled
+local asteroid_belt_setting = settings.startup["tr-enable-asteroid-belt-clones"]
+local kuiper_belt_setting = settings.startup["tr-enable-kuiper-belt-clones"]
+local enable_asteroid_belt = asteroid_belt_setting and asteroid_belt_setting.value
+local enable_kuiper_belt = kuiper_belt_setting and kuiper_belt_setting.value
+
+if not enable_asteroid_belt and not enable_kuiper_belt then
+  log("[Better Planets] Both asteroid belt and Kuiper belt clones disabled by settings")
   return
 end
 
@@ -309,37 +313,46 @@ local locations_to_extend = {}
 local technologies_to_extend = {}
 
 for i, pair in ipairs(clones_to_create) do
-  -- Create inner location clone
-  if pair.inner then
-    local inner_clone = create_location_clone(pair.inner)
-    if inner_clone then
-      table.insert(locations_to_extend, inner_clone)
+  -- Determine if this clone should be created based on settings
+  -- Clones 1-3 are asteroid belt, clones 4-6 are Kuiper belt
+  local is_asteroid_belt_clone = (i >= 1 and i <= 3)
+  local is_kuiper_belt_clone = (i >= 4 and i <= 6)
+
+  local should_create = (is_asteroid_belt_clone and enable_asteroid_belt) or (is_kuiper_belt_clone and enable_kuiper_belt)
+
+  if should_create then
+    -- Create inner location clone
+    if pair.inner then
+      local inner_clone = create_location_clone(pair.inner)
+      if inner_clone then
+        table.insert(locations_to_extend, inner_clone)
+      end
     end
-  end
 
-  -- Create outer location clone
-  if pair.outer then
-    local outer_clone = create_location_clone(pair.outer)
-    if outer_clone then
-      table.insert(locations_to_extend, outer_clone)
+    -- Create outer location clone
+    if pair.outer then
+      local outer_clone = create_location_clone(pair.outer)
+      if outer_clone then
+        table.insert(locations_to_extend, outer_clone)
+      end
     end
-  end
 
-  -- Create technology clone
-  if pair.technology then
-    local unlock_locations = {}
-    if pair.inner then table.insert(unlock_locations, pair.inner.clone_name) end
-    if pair.outer then table.insert(unlock_locations, pair.outer.clone_name) end
+    -- Create technology clone
+    if pair.technology then
+      local unlock_locations = {}
+      if pair.inner then table.insert(unlock_locations, pair.inner.clone_name) end
+      if pair.outer then table.insert(unlock_locations, pair.outer.clone_name) end
 
-    local tech_clone = create_technology_clone({
-      original_tech = pair.technology.original_tech,
-      clone_tech = pair.technology.clone_tech,
-      unlock_locations = unlock_locations,
-      localised_name_suffix = pair.technology.localised_name_suffix,
-      custom_locale_key = pair.technology.custom_locale_key
-    })
-    if tech_clone then
-      table.insert(technologies_to_extend, tech_clone)
+      local tech_clone = create_technology_clone({
+        original_tech = pair.technology.original_tech,
+        clone_tech = pair.technology.clone_tech,
+        unlock_locations = unlock_locations,
+        localised_name_suffix = pair.technology.localised_name_suffix,
+        custom_locale_key = pair.technology.custom_locale_key
+      })
+      if tech_clone then
+        table.insert(technologies_to_extend, tech_clone)
+      end
     end
   end
 end

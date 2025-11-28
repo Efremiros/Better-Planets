@@ -177,6 +177,15 @@ data:extend({
     localised_name = {"bp.enable-asteroid-belt-clones"},
     localised_description = {"bp.desc-enable-asteroid-belt-clones"},
     order = "000-e-asteroid-belt-clones"
+  },
+  {
+    type = "bool-setting",
+    name = "tr-enable-kuiper-belt-clones",
+    setting_type = "startup",
+    default_value = true,
+    localised_name = {"bp.enable-kuiper-belt-clones"},
+    localised_description = {"bp.desc-enable-kuiper-belt-clones"},
+    order = "000-f-kuiper-belt-clones"
   }
 })
 
