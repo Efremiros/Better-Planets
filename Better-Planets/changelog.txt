@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.2
+Date: 2025-12-20
+  New Features:
+    - Added support for new planets: OMNI, Arboria, Khemia, Arcanyx, Nexus (and it's locations), Lunar Legacy planets. Please suggest their default starmap location in the mod discussion.
+  Bug fixes:
+    - Fixed bug, when disabling connection redrawing does not draw connections between asteroid belts locations.
+    - By default enables second asteroid belt layer (if Better_Starmap_Background mod persist).
+---------------------------------------------------------------------------------------------------
 Version: 1.1.1
 Date: 2025-11-28
   New Features:

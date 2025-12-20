@@ -593,6 +593,17 @@ end
 -- Load asteroid belt clones if enabled
 if settings.startup["tr-enable-asteroid-belt-clones"] and settings.startup["tr-enable-asteroid-belt-clones"].value then
   require("__Better-Planets__/scripts/asteroid-belts")
+  require("__Better-Planets__/scripts/space-connections")
+  --New exits from asteroid belt
+  BetterPlanetsConnections.ensure("asteroid-belt-inner-edge", "asteroid-belt-outer-edge", { length = 20000 })
+  BetterPlanetsConnections.ensure("asteroid-belt-inner-edge-clone1", "asteroid-belt-outer-edge-clone1", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge" })
+  BetterPlanetsConnections.ensure("asteroid-belt-inner-edge-clone2", "asteroid-belt-outer-edge-clone2", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge"})
+  BetterPlanetsConnections.ensure("asteroid-belt-inner-edge-clone3", "asteroid-belt-outer-edge-clone3", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge" })
+
+  --Kuiper belt
+  BetterPlanetsConnections.ensure("asteroid-belt-inner-edge-clone4", "solar-system-edge", { length = 100000})
+  BetterPlanetsConnections.ensure("asteroid-belt-inner-edge-clone5", "calidus-senestella-gate-calidus", { source_from = "asteroid-belt-inner-edge-clone4", source_to = "solar-system-edge"})
+  BetterPlanetsConnections.ensure("asteroid-belt-inner-edge-clone6", "sye-nauvis-ne", { source_from = "asteroid-belt-inner-edge-clone4", source_to = "solar-system-edge"})
 end
 
 require("__Better-Planets__/scripts/orbit-drawer")

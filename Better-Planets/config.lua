@@ -46,6 +46,20 @@ local DEFAULTS = {
   {name="vicrox", mod="planet-vicrox-reworked", radius=29, angle=320},
   {name="akularis", mod="planet-akularis-reworked", radius=26, angle=340},
 
+  {name="akularis", mod="planet-akularis-reworked", radius=26, angle=340},
+
+  --Additional support (in the first asteroid layer):
+  {name="arboria", mod="arboria", radius=0, angle=0},
+  {name="alchemy-planet", mod="alchemy-khemia", radius=0, angle=0},
+  {name="arcanyx", mod="Arcanyx", radius=0, angle=0},
+  {name="nexus", mod="Nexus", radius=0, angle=0},
+  {name="oort-cloud", mod="Nexus", radius=0, angle=0},
+  {name="sol", mod="Nexus", radius=0, angle=0},
+  {name="crymora", mod="lunar_legacy", radius=0, angle=0},
+  {name="solune", mod="lunar_legacy", radius=0, angle=0},
+  {name="lunaris", mod="lunar_legacy", radius=0, angle=0},
+  {name="OMNI", mod="omni", radius=0, angle=0},
+
   --{name="asteroid-belt-inner-edge", mod="AsteroidBelts"},
   --{name="asteroid-belt-outer-edge", mod="AsteroidBelts"},
 

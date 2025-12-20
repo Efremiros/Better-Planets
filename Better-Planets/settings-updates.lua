@@ -1,0 +1,1 @@
+data.raw["bool-setting"]["asteroid-belt-2-enabled"].default_value = true
