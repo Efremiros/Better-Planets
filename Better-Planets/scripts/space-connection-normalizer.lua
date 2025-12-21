@@ -69,7 +69,6 @@ do
         if newv ~= old then
           conn.length = newv
           changed = changed + 1
-          -- Some logging for debugging, can be commented out:
           log(("[Better-Planets] round-conn: %s (%s ↔ %s): %d → %d km")
               :format(name, tostring(conn.from), tostring(conn.to), old, newv))
         end

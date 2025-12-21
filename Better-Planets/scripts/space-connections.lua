@@ -210,7 +210,11 @@ local function orbits_main_star(loc)
   return parent.type == "space-location" and parent.name == "star"
 end
 
-if data.raw["space-connection"] then
+-- If the zero-degree connection removal feature is enabled
+local remove_zero_degree_enabled = settings.startup["tr-enable-remove-zero-degree-connections"]
+  and settings.startup["tr-enable-remove-zero-degree-connections"].value
+
+if remove_zero_degree_enabled and data.raw["space-connection"] then
   for conn_name, conn in pairs(data.raw["space-connection"]) do
     if conn and type(conn.from) == "string" and type(conn.to) == "string" then
       local from_loc = data.raw.planet[conn.from] or data.raw["space-location"][conn.from]
@@ -307,3 +311,14 @@ C.remove("secretas", "sye-nauvis-ne")
 C.remove("vesta", "asteroid-belt-inner-edge-clone5")
 C.remove("omnia", "sye-nauvis-ne")
 C.ensure("sye-nauvis-ne", "sye-nexuz-sw", { length = 300000 })
+
+--New exits from asteroid belt
+C.ensure("asteroid-belt-inner-edge", "asteroid-belt-outer-edge", { length = 20000 })
+C.ensure("asteroid-belt-inner-edge-clone1", "asteroid-belt-outer-edge-clone1", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge" })
+C.ensure("asteroid-belt-inner-edge-clone2", "asteroid-belt-outer-edge-clone2", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge"})
+C.ensure("asteroid-belt-inner-edge-clone3", "asteroid-belt-outer-edge-clone3", { source_from = "asteroid-belt-inner-edge", source_to = "asteroid-belt-outer-edge" })
+
+--Kuiper belt
+C.ensure("asteroid-belt-inner-edge-clone4", "solar-system-edge", { length = 100000})
+C.ensure("asteroid-belt-inner-edge-clone5", "calidus-senestella-gate-calidus", { source_from = "asteroid-belt-inner-edge-clone4", source_to = "solar-system-edge"})
+C.ensure("asteroid-belt-inner-edge-clone6", "sye-nauvis-ne", { source_from = "asteroid-belt-inner-edge-clone4", source_to = "solar-system-edge"})

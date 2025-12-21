@@ -171,12 +171,21 @@ data:extend({
   },
   {
     type = "bool-setting",
+    name = "tr-enable-remove-zero-degree-connections",
+    setting_type = "startup",
+    default_value = true,
+    localised_name = {"bp.enable-remove-zero-degree-connections"},
+    localised_description = {"bp.desc-enable-remove-zero-degree-connections"},
+    order = "000-e-remove-zero-degree-connections"
+  },
+  {
+    type = "bool-setting",
     name = "tr-enable-asteroid-belt-clones",
     setting_type = "startup",
     default_value = true,
     localised_name = {"bp.enable-asteroid-belt-clones"},
     localised_description = {"bp.desc-enable-asteroid-belt-clones"},
-    order = "000-e-asteroid-belt-clones"
+    order = "000-f-asteroid-belt-clones"
   },
   {
     type = "bool-setting",
@@ -185,7 +194,7 @@ data:extend({
     default_value = true,
     localised_name = {"bp.enable-kuiper-belt-clones"},
     localised_description = {"bp.desc-enable-kuiper-belt-clones"},
-    order = "000-f-kuiper-belt-clones"
+    order = "000-g-kuiper-belt-clones"
   }
 })
 
