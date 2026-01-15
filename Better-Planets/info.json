@@ -1,6 +1,6 @@
 {
   "name": "Better-Planets",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "title": "Better Planets",
   "author": "Efremiros",
   "factorio_version": "2.0",
@@ -12,7 +12,7 @@
     "PlanetsLib",
     "Redrawn-Space-Connections",
     "redrawn-space-compat-fixes",
-    "? Better_Starmap_Background",
+    "Better_Starmap_Background",
     "? Starmap_Nexuz",
     "? dea-dia-system",
     "? metal-and-stars",

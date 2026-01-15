@@ -59,6 +59,7 @@ local DEFAULTS = {
   {name="solune", mod="lunar_legacy", radius=0, angle=0},
   {name="lunaris", mod="lunar_legacy", radius=0, angle=0},
   {name="OMNI", mod="omni", radius=0, angle=0},
+  {name="muria", mod="Muria", radius=0, angle=0},
 
   --{name="asteroid-belt-inner-edge", mod="AsteroidBelts"},
   --{name="asteroid-belt-outer-edge", mod="AsteroidBelts"},
