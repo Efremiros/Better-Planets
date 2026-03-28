@@ -52,17 +52,25 @@ local DEFAULTS = {
   {name="arboria", mod="arboria", radius=0, angle=0},
   {name="alchemy-planet", mod="alchemy-khemia", radius=0, angle=0},
   {name="arcanyx", mod="Arcanyx", radius=0, angle=0},
+  {name="OMNI", mod="omni", radius=0, angle=0},
+  {name="muria", mod="Muria", radius=0, angle=0},
+  {name="carna", mod="carna", radius=0, angle=0},
+  {name="tellus", mod="planetaris-tellus", radius=0, angle=0},
+  {name="virentis", mod="virentis", radius=0, angle=0},
+
+  {name="apia-carnova-orbit", mod="apia", radius=0, angle=0},
+  {name="apia", mod="apia", radius=0, angle=0},
+  {name="carnova", mod="apia", radius=0, angle=0},
+
   {name="nexus", mod="Nexus", radius=0, angle=0},
   {name="oort-cloud", mod="Nexus", radius=0, angle=0},
   {name="sol", mod="Nexus", radius=0, angle=0},
+
   {name="crymora", mod="lunar_legacy", radius=0, angle=0},
   {name="solune", mod="lunar_legacy", radius=0, angle=0},
   {name="lunaris", mod="lunar_legacy", radius=0, angle=0},
-  {name="OMNI", mod="omni", radius=0, angle=0},
-  {name="muria", mod="Muria", radius=0, angle=0},
 
   --{name="asteroid-belt-inner-edge", mod="AsteroidBelts"},
-  --{name="asteroid-belt-outer-edge", mod="AsteroidBelts"},
 
   {name="aquilo", mod=true, radius=44, angle=280},
   {name="cubium", mod="cubium", radius=42, angle=230},

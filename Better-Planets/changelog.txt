@@ -1,5 +1,10 @@
 ---------------------------------------------------------------------------------------------------
 Version: 1.1.6
+Date: 2026-03-28
+  New Features:
+    - Added Carna, Tellus, Virentis, and Apia system planets support. You can suggest defaults in mod topic.
+---------------------------------------------------------------------------------------------------
+Version: 1.1.5
 Date: 2026-01-16
   New Features:
     - Added Muria planet support.
