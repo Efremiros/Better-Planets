@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.7
+Date: 2026-03-30
+  New Features:
+    - Added Void Processing black hole approach and black hole locations.
+    - Added Deep Space Encounters mod location.
+---------------------------------------------------------------------------------------------------
 Version: 1.1.6
 Date: 2026-03-28
   New Features:
