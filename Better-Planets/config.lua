@@ -75,6 +75,8 @@ local DEFAULTS = {
   {name="black-hole", mod="VoidProcessing", radius=0, angle=0},
   {name="black-hole-approach", mod="VoidProcessing", radius=0, angle=0},
 
+  {name="ribbonia", mod="ribbonia", radius=0, angle=0},
+
   --{name="asteroid-belt-inner-edge", mod="AsteroidBelts"},
 
   {name="aquilo", mod=true, radius=44, angle=280},
