@@ -77,6 +77,11 @@ local DEFAULTS = {
 
   {name="ribbonia", mod="ribbonia", radius=0, angle=0},
 
+  {name="crucible-orbit", mod="planet-crucible", radius=0, angle=0},
+  {name="crucible", mod="planet-crucible", radius=0, angle=0},
+
+  {name="naufulglebunusilo", mod="naufulglebunusilo", radius=0, angle=0},
+
   --{name="asteroid-belt-inner-edge", mod="AsteroidBelts"},
 
   {name="aquilo", mod=true, radius=44, angle=280},

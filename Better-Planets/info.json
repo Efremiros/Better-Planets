@@ -1,6 +1,6 @@
 {
   "name": "Better-Planets",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "title": "Better Planets",
   "author": "Efremiros",
   "factorio_version": "2.0",
@@ -66,6 +66,8 @@
     "? deep-space-encounters",
     "? VoidProcessing",
     "? ribbonia",
+    "? planet-crucible",
+    "? naufulglebunusilo",
     "(?) exotic-space-industries",
     "(?) exotic-space-industries-remembrance",
     "(?) atomic-arig"
